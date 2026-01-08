@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Building2, ArrowRight } from 'lucide-react';
@@ -13,8 +13,16 @@ export const Login = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const login = useAuthStore((state: any) => state.login);
+    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
     const navigate = useNavigate();
     const settings = useUISettings(state => state.settings);
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/', { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
