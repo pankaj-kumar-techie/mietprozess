@@ -68,13 +68,12 @@ export const registerWithFirebase = async (email: string, password: string): Pro
 
 /**
  * Production login flow using Firebase Authentication.
+ * Now allows ANY Firebase authenticated user - whitelist is optional for role assignment only.
  */
 export const loginWithFirebase = async (email: string, password: string): Promise<UserProfile> => {
     if (!auth) {
         // Fallback for mock mode
-        const profile = await verifyWhitelist(email);
-        if (!profile) throw new Error("Mock-Login fehlgeschlagen.");
-        return profile;
+        return { email, role: 'user' };
     }
 
     try {
@@ -82,14 +81,13 @@ export const loginWithFirebase = async (email: string, password: string): Promis
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // 2. Verify against Firestore Whitelist
+        // 2. Check whitelist for role assignment (optional)
         const profile = await verifyWhitelist(user.email || '');
-        if (!profile) {
-            await signOut(auth); // Sign out if not whitelisted
-            throw new Error("Ihre Email ist nicht autorisiert. Bitte Administrator kontaktieren.");
-        }
 
-        return profile;
+        // If user is in whitelist, use their assigned role
+        // Otherwise, default to 'user' role
+        return profile || { email: user.email || email, role: 'user' };
+
     } catch (error: any) {
         console.error("Firebase Login failed:", error);
 
@@ -109,7 +107,7 @@ export const loginWithFirebase = async (email: string, password: string): Promis
                 throw new Error("Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.");
             default:
                 if (error.message && !error.code) {
-                    throw error; // Re-throw custom errors (like whitelist check)
+                    throw error; // Re-throw custom errors
                 }
                 throw new Error("Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.");
         }

@@ -38,18 +38,16 @@ function App() {
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser && firebaseUser.email) {
-        // User is signed in, verify whitelist and restore session
+        // User is signed in, check whitelist for role (optional)
         try {
           const profile = await verifyWhitelist(firebaseUser.email);
-          if (profile) {
-            login(firebaseUser.email, profile.role);
-          } else {
-            // User not in whitelist, sign them out
-            logout();
-          }
+          // Use whitelist role if available, otherwise default to 'user'
+          const userRole = profile?.role || 'user';
+          login(firebaseUser.email, userRole);
         } catch (error) {
           console.error('Session restoration failed:', error);
-          logout();
+          // Still log them in with default role
+          login(firebaseUser.email, 'user');
         }
       } else {
         // User is signed out
