@@ -6,7 +6,8 @@ import {
     deleteDoc,
     doc,
     query,
-    orderBy
+    orderBy,
+    onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Apartment } from "@/types";
@@ -45,8 +46,39 @@ export const apartmentService = {
             } as Apartment));
         } catch (error) {
             console.error("Error fetching apartments:", error);
-            // In case of error (like no Firestore config), we could return mock data or empty array
             return [];
+        }
+    },
+
+    // Real-time subscription for instant updates (no refresh needed!)
+    subscribeToApartments: (callback: (apartments: Apartment[]) => void): (() => void) => {
+        if (!db) {
+            callback(MOCK_DATA);
+            return () => { }; // No-op unsubscribe for mock
+        }
+
+        try {
+            const q = query(collection(db, COLLECTION_NAME), orderBy('lastActivity', 'desc'));
+
+            const unsubscribe = onSnapshot(q,
+                (querySnapshot) => {
+                    const apartments = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    } as Apartment));
+                    callback(apartments);
+                },
+                (error) => {
+                    console.error("Error in real-time listener:", error);
+                    callback([]);
+                }
+            );
+
+            return unsubscribe;
+        } catch (error) {
+            console.error("Error setting up listener:", error);
+            callback([]);
+            return () => { };
         }
     },
 
@@ -77,3 +109,4 @@ export const apartmentService = {
         await deleteDoc(docRef);
     }
 };
+

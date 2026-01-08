@@ -10,6 +10,7 @@ interface ApartmentState {
     searchTerm: string;
 
     fetchApartments: () => Promise<void>;
+    subscribeToApartments: (callback: (apartments: Apartment[]) => void) => () => void;
     addApartment: (apartment: Omit<Apartment, 'id'>) => Promise<void>;
     updateApartment: (id: string, updates: Partial<Apartment>) => Promise<void>;
     deleteApartment: (id: string) => Promise<void>;
@@ -17,7 +18,7 @@ interface ApartmentState {
     setSearchTerm: (term: string) => void;
 }
 
-export const useApartmentStore = create<ApartmentState>((set) => ({
+export const useApartmentStore = create<ApartmentState>((set, get) => ({
     apartments: [],
     loading: false,
     error: null,
@@ -34,34 +35,68 @@ export const useApartmentStore = create<ApartmentState>((set) => ({
         }
     },
 
+    // Real-time subscription for instant updates
+    subscribeToApartments: (callback) => {
+        return apartmentService.subscribeToApartments((apartments) => {
+            set({ apartments, loading: false });
+            callback(apartments);
+        });
+    },
+
     addApartment: async (apartment) => {
         try {
+            // Optimistic update
+            const tempId = 'temp-' + Date.now();
+            const tempApartment = { id: tempId, ...apartment } as Apartment;
+            set(state => ({ apartments: [...state.apartments, tempApartment] }));
+
+            // Real update
             const newAp = await apartmentService.createApartment(apartment);
-            set(state => ({ apartments: [...state.apartments, newAp] }));
+
+            // Replace temp with real
+            set(state => ({
+                apartments: state.apartments.map(a => a.id === tempId ? newAp : a)
+            }));
         } catch (err: any) {
-            set({ error: err.message });
+            // Rollback on error
+            set(state => ({
+                apartments: state.apartments.filter(a => !a.id.startsWith('temp-')),
+                error: err.message
+            }));
             throw err;
         }
     },
 
     updateApartment: async (id, updates) => {
         try {
-            const updatedAp = await apartmentService.updateApartment(id, updates);
+            // Optimistic update
             set(state => ({
-                apartments: state.apartments.map(a => a.id === id ? updatedAp : a)
+                apartments: state.apartments.map(a =>
+                    a.id === id ? { ...a, ...updates } : a
+                )
             }));
+
+            // Real update
+            await apartmentService.updateApartment(id, updates);
         } catch (err: any) {
+            // Rollback and refetch on error
+            get().fetchApartments();
             set({ error: err.message });
         }
     },
 
     deleteApartment: async (id) => {
         try {
-            await apartmentService.deleteApartment(id);
+            // Optimistic delete
             set(state => ({
                 apartments: state.apartments.filter(a => a.id !== id)
             }));
+
+            // Real delete
+            await apartmentService.deleteApartment(id);
         } catch (err: any) {
+            // Rollback on error
+            get().fetchApartments();
             set({ error: err.message });
         }
     },
@@ -69,3 +104,4 @@ export const useApartmentStore = create<ApartmentState>((set) => ({
     setFilterResponsible: (responsible) => set({ filterResponsible: responsible }),
     setSearchTerm: (term) => set({ searchTerm: term }),
 }));
+

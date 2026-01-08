@@ -12,7 +12,7 @@ import { ApartmentDetailsModal } from '@/components/modals/ApartmentDetailsModal
 export const Dashboard: React.FC = () => {
     const {
         apartments,
-        fetchApartments,
+        subscribeToApartments,
         filterResponsible,
         searchTerm,
         updateApartment,
@@ -23,9 +23,13 @@ export const Dashboard: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(null);
 
+    // Real-time subscription - updates automatically without refresh!
     useEffect(() => {
-        fetchApartments();
-    }, [fetchApartments]);
+        const unsubscribe = subscribeToApartments(() => {
+            // Data automatically updated in store
+        });
+        return () => unsubscribe();
+    }, [subscribeToApartments]);
 
     // Filter apartments for Kanban (List handles its own filtering inside because of table sort complexity, 
     // or we can lift it up. For Kanban we MUST filter pass-down)
