@@ -89,7 +89,7 @@ export const Login = () => {
 
                     <div className="space-y-2">
                         <label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">
-                            Passwort
+                            Password
                         </label>
                         <input
                             id="password"
