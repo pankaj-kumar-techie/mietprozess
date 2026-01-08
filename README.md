@@ -21,6 +21,9 @@ MietProzess is a premium, real-time termination management system for real estat
 - [User & Admin Guide](./docs/USER_GUIDE.md)
 - [Deployment & Setup](./docs/DEPLOYMENT.md)
 - [UI Configuration](./docs/CONFIGURATION.md)
+- [Visual Customization Examples](./docs/CUSTOMIZATION_EXAMPLES.md)
+- [No-Code Admin Mastery Guide](./docs/NO_CODE_MASTERY.md)
+- [Future Roadmap](./docs/FUTURE_ROADMAP.md)
 
 ## 🏁 Quick Start
 1. `npm install`

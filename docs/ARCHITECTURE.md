@@ -6,13 +6,38 @@ MietProzess follows a modern, decoupled architecture designed for speed and reli
 The system is built on a "Store-First" principle where the UI reacts to state changes in Zustand, which in turn synchronizes with Firebase Firestore.
 
 ```mermaid
+graph LR
+    subgraph "Frontend (Vercel)"
+        UI[React View Layer] <--> Store[Zustand State]
+        Store <--> Content[content.ts Config]
+    end
+    
+    subgraph "Backend (Firebase)"
+        Store <--> Firestore[(Firestore Real-time DB)]
+        Auth[Firebase Auth/Whitelist] --> UI
+    end
+    
+    subgraph "Exports"
+        UI --> XLSX[xlsx Utility]
+        XLSX --> File[Daily .xlsx Backup]
+    end
+```
+
+## 🔄 Data Lifecycle & Synchronization
+MietProzess ensures data integrity through a unidirectional data flow. When a user checks a box or adds a comment:
+1. The **UI** dispatches an action.
+2. **Zustand** updates the local state (instant feedback).
+3. **Firebase Services** push the change to Firestore.
+4. All other connected clients receive the update via **Real-time Listeners**.
+
+## 🔮 Future No-Code Vision
+To make this tool 100% manageable by non-tech staff, the following transition is planned:
+
+```mermaid
 graph TD
-    User((User)) --> UI[React UI Components]
-    UI --> Stores[Zustand Stores]
-    Stores --> Services[Firebase Services]
-    Services --> DB[(Firestore DB)]
-    UI --> Export[XLSX Export Utility]
-    Export --> Download[User Backup]
+    Current[Current: Hardcoded Types] --> Phase1[Phase 1: Database-Driven Checklists]
+    Phase1 --> Phase2[Phase 2: Dynamic Status Pipeline]
+    Phase2 --> Phase3[Phase 3: Drag-and-Drop Form Builder]
 ```
 
 ## 🧠 State Management
