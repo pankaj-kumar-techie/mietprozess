@@ -1,6 +1,7 @@
 import { useUISettings } from '@/store/useUISettings';
 import { Save, RotateCcw, Layout, Type } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { UserManagement } from '@/components/admin/UserManagement';
 
 export const Admin = () => {
     const { settings, updateSetting, resetToDefaults, isLoading } = useUISettings();
@@ -21,7 +22,7 @@ export const Admin = () => {
     );
 
     return (
-        <div className="p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-4xl font-black text-slate-800">No-Code Admin</h1>
@@ -32,6 +33,9 @@ export const Admin = () => {
                     <span>Auf Standard zurücksetzen</span>
                 </Button>
             </header>
+
+            {/* User Management Section - Full Width */}
+            <UserManagement />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Header Section */}

@@ -10,6 +10,7 @@ import { exportApartmentsToExcel } from '@/lib/exportUtils';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { NOTIFICATION_CONFIG } from '@/lib/notifications';
 import { useUISettings } from '@/store/useUISettings';
+import { logoutFromFirebase } from '@/lib/auth-logic';
 
 interface HeaderProps {
     onNewTermination: () => void;
@@ -22,7 +23,8 @@ export const Header: React.FC<HeaderProps> = ({ onNewTermination }) => {
     const addNotification = useNotificationStore(state => state.addNotification);
     const settings = useUISettings(state => state.settings);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await logoutFromFirebase();
         logout();
         navigate('/login');
     }
