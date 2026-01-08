@@ -1,24 +1,18 @@
 import { create } from 'zustand';
 
-interface User {
-    id: string;
-    name: string;
-    role: 'admin' | 'viewer';
-}
-
 interface AuthState {
-    user: User | null;
     isAuthenticated: boolean;
-    login: (name: string) => void;
+    user: { name: string; role: 'admin' | 'user' } | null;
+    login: (name: string, role?: 'admin' | 'user') => void;
     logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-    user: null,
     isAuthenticated: false,
-    login: (name: string) => set({
-        user: { id: '1', name, role: 'admin' },
-        isAuthenticated: true
+    user: null,
+    login: (name: string, role: 'admin' | 'user' = 'user') => set({
+        isAuthenticated: true,
+        user: { name, role }
     }),
-    logout: () => set({ user: null, isAuthenticated: false }),
+    logout: () => set({ isAuthenticated: false, user: null }),
 }));

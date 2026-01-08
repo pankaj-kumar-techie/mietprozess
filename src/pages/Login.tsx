@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
-import { CONTENT } from '@/lib/content';
 import { Building2, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { verifyWhitelist } from '@/lib/auth-logic';
+import { useUISettings } from '@/store/useUISettings';
 
 export const Login = () => {
     const [name, setName] = useState('');
@@ -12,6 +12,7 @@ export const Login = () => {
     const [loading, setLoading] = useState(false);
     const login = useAuthStore((state: any) => state.login);
     const navigate = useNavigate();
+    const settings = useUISettings(state => state.settings);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,15 +24,16 @@ export const Login = () => {
                 // If Firebase is configured (API Key is present), we can do a whitelist check
                 // We treat names with '@' as email attempts for production mode
                 if (db && name.includes('@')) {
-                    const isAuthorized = await verifyWhitelist(name);
-                    if (!isAuthorized) {
+                    const profile = await verifyWhitelist(name);
+                    if (!profile) {
                         setError("Diese Email-Adresse ist nicht autorisiert.");
                         setLoading(false);
                         return;
                     }
+                    login(name, profile.role);
+                } else {
+                    login(name, 'admin'); // Default for mock mode
                 }
-
-                login(name);
                 navigate('/');
             } catch (err) {
                 console.error("Login error:", err);
@@ -49,8 +51,8 @@ export const Login = () => {
                     <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg mx-auto mb-6 rotate-3">
                         <Building2 className="w-8 h-8" />
                     </div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight mb-2">{CONTENT.login.title}</h1>
-                    <p className="text-slate-400 font-medium">{CONTENT.login.subtitle}</p>
+                    <h1 className="text-3xl font-black text-slate-800 tracking-tight mb-2">{settings.login.title}</h1>
+                    <p className="text-slate-400 font-medium">{settings.login.subtitle}</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
@@ -63,7 +65,7 @@ export const Login = () => {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder={CONTENT.login.inputPlaceholder}
+                            placeholder={settings.login.inputPlaceholder}
                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:font-medium placeholder:text-slate-300"
                             autoFocus
                         />
@@ -75,14 +77,14 @@ export const Login = () => {
                         disabled={!name.trim() || loading}
                         className="w-full bg-blue-600 text-white rounded-2xl py-4 font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xl shadow-blue-200"
                     >
-                        {loading ? 'Anmelden...' : CONTENT.login.button}
+                        {loading ? 'Anmelden...' : settings.login.button}
                         {!loading && <ArrowRight className="w-5 h-5" />}
                     </button>
 
                 </form>
 
                 <div className="mt-12 text-center">
-                    <p className="text-xs text-slate-300 font-bold">{CONTENT.login.footer}</p>
+                    <p className="text-xs text-slate-300 font-bold">{settings.login.footer}</p>
                 </div>
             </div>
         </div>

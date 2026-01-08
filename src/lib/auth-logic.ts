@@ -3,20 +3,33 @@ import { db } from './firebase';
 
 const WHITELIST_COLLECTION = 'authorized_users';
 
+export interface UserProfile {
+    email: string;
+    role: 'admin' | 'user';
+}
+
 /**
  * Checks if a user's email is present in the Firestore whitelist.
- * This is used to restrict access to the dashboard during production.
+ * Returns the user's document data if found.
  */
-export const verifyWhitelist = async (email: string): Promise<boolean> => {
-    if (!db) return true; // Fail-safe for mock mode
+export const verifyWhitelist = async (email: string): Promise<UserProfile | null> => {
+    if (!db) return { email, role: 'admin' }; // Fail-safe for mock mode
 
     try {
         const q = query(collection(db, WHITELIST_COLLECTION), where("email", "==", email.toLowerCase()));
         const querySnapshot = await getDocs(q);
-        return !querySnapshot.empty;
+
+        if (!querySnapshot.empty) {
+            const data = querySnapshot.docs[0].data();
+            return {
+                email: data.email || email,
+                role: data.role || 'user'
+            } as UserProfile;
+        }
+        return null;
     } catch (error) {
         console.error("Whitelist check failed:", error);
-        return false;
+        return null;
     }
 };
 
