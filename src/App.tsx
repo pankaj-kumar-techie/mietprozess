@@ -5,7 +5,11 @@ import { Dashboard } from '@/pages/Dashboard';
 import { Login } from '@/pages/Login';
 import { Help } from '@/pages/Help';
 import { Admin } from '@/pages/Admin';
+import { AdminDashboard } from '@/pages/admin/AdminDashboard';
+import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
+import { AdminBrandingPage } from '@/pages/admin/AdminBrandingPage';
 import { ToastContainer } from '@/components/ui/Toast';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useUISettings } from '@/store/useUISettings';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -32,25 +36,22 @@ function App() {
     initializeUI();
   }, [initializeUI]);
 
-  // Firebase Auth State Listener - Restores session on page refresh
+  // Firebase Auth state listener for session persistence
   useEffect(() => {
     if (!auth) return;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser && firebaseUser.email) {
-        // User is signed in, check whitelist for role (optional)
         try {
           const profile = await verifyWhitelist(firebaseUser.email);
-          // Use whitelist role if available, otherwise default to 'user'
           const userRole = profile?.role || 'user';
-          login(firebaseUser.email, userRole);
+          const displayName = profile?.displayName;
+          login(firebaseUser.email, userRole, displayName);
         } catch (error) {
           console.error('Session restoration failed:', error);
-          // Still log them in with default role
           login(firebaseUser.email, 'user');
         }
       } else {
-        // User is signed out
         logout();
       }
     });
@@ -59,19 +60,23 @@ function App() {
   }, [login, logout]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-      </Routes>
-      <ToastContainer />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="/admin/branding" element={<AdminRoute><AdminBrandingPage /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><Admin /></AdminRoute>} />
+          <Route path="/admin/security" element={<AdminRoute><Admin /></AdminRoute>} />
+        </Routes>
+        <ToastContainer />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

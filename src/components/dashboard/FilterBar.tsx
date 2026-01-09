@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search } from "lucide-react";
-import { TEAM_MEMBERS } from "@/types";
 import { useApartmentStore } from "@/store/useApartmentStore";
+import { getTeamMembers, type TeamMember } from '@/services/teamService';
 import { cn } from "@/lib/utils";
 
 interface FilterBarProps {
@@ -11,10 +11,19 @@ interface FilterBarProps {
 
 export const FilterBar: React.FC<FilterBarProps> = ({ currentView, onViewChange }) => {
     const { searchTerm, setSearchTerm, filterResponsible, setFilterResponsible } = useApartmentStore();
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+
+    useEffect(() => {
+        const loadTeam = async () => {
+            const members = await getTeamMembers();
+            setTeamMembers(members);
+        };
+        loadTeam();
+    }, []);
 
     return (
-        <div className="p-8 pb-4">
-            <div className="bg-white p-5 rounded-[2rem] border-2 border-slate-100 shadow-sm flex flex-wrap items-center gap-6">
+        <div className="bg-white border-b border-slate-200 px-8 py-6 sticky top-[88px] z-30 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div className="w-full sm:flex-1 sm:min-w-[300px] relative">
                     <input
                         type="text"
@@ -32,7 +41,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ currentView, onViewChange 
                     className="w-full sm:w-auto bg-slate-50 border-none rounded-2xl py-3 px-6 font-black text-sm outline-none cursor-pointer hover:bg-slate-100 transition-colors"
                 >
                     <option value="Alle">Alle Zuständigkeiten</option>
-                    {TEAM_MEMBERS.map(m => <option key={m} value={m}>{m}</option>)}
+                    {teamMembers.map(member => <option key={member.id} value={member.displayName}>{member.displayName}</option>)}
                 </select>
 
                 <div className="w-full sm:w-auto flex bg-slate-100 p-1.5 rounded-2xl shadow-inner border border-slate-200/50">

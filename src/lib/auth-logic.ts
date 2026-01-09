@@ -7,6 +7,7 @@ const WHITELIST_COLLECTION = 'authorized_users';
 export interface UserProfile {
     email: string;
     role: 'admin' | 'user';
+    displayName?: string; // Full name of the user
 }
 
 /**

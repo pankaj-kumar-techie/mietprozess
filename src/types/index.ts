@@ -75,5 +75,5 @@ export const STATUS_COLORS: Record<Status, string> = {
     'Abgeschlossen': 'bg-gray-100 border-gray-300 text-gray-700'
 };
 
-export const TEAM_MEMBERS = ['Kein Zuständiger', 'Max Mustermann', 'Erika Musterfrau', 'Hans Schmidt', 'Anna Meier'];
+// Team members are now loaded dynamically from Firestore - see teamService.ts
 export const RELETTING_OPTIONS = ['Ja Weitervermietung', 'Nein Nachmieter vorhanden', 'Nein Umbau'];

@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApartmentStore } from '@/store/useApartmentStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import type { Apartment, ChecklistItem, Responsible, RelettingOption } from '@/types';
-import { STATUS_OPTIONS, TEAM_MEMBERS, RELETTING_OPTIONS } from '@/types';
+import { STATUS_OPTIONS, RELETTING_OPTIONS } from '@/types';
+import { getTeamMembers, type TeamMember } from '@/services/teamService';
+import { logActivity } from '@/services/userService';
 
 // Basic checklist schema to initialize
 const DEFAULT_CHECKLIST_SCHEMA: ChecklistItem[] = [
@@ -57,15 +60,43 @@ interface AddApartmentModalProps {
 
 export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose }) => {
     const { addApartment } = useApartmentStore();
+    const user = useAuthStore(state => state.user);
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const [loadingTeam, setLoadingTeam] = useState(true);
+
     const [formData, setFormData] = useState<Partial<Apartment>>({
         address: '',
         objectName: '',
         oldTenant: '',
         terminationDate: '',
         status: STATUS_OPTIONS[0],
-        responsible: TEAM_MEMBERS[0] as Responsible,
+        responsible: '',
         relettingOption: RELETTING_OPTIONS[0] as RelettingOption,
     });
+
+    // Load team members from Firestore
+    useEffect(() => {
+        const loadTeam = async () => {
+            try {
+                const members = await getTeamMembers();
+                setTeamMembers(members);
+                // Set current user as default responsible
+                if (user && members.length > 0) {
+                    const currentUserMember = members.find(m => m.email === user.email);
+                    if (currentUserMember) {
+                        setFormData(prev => ({ ...prev, responsible: currentUserMember.displayName as Responsible }));
+                    } else if (members.length > 0) {
+                        setFormData(prev => ({ ...prev, responsible: members[0].displayName as Responsible }));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load team members:', error);
+            } finally {
+                setLoadingTeam(false);
+            }
+        };
+        loadTeam();
+    }, [user]);
 
     const handleSubmit = async () => {
         if (!formData.address || !formData.objectName || !formData.oldTenant || !formData.terminationDate) {
@@ -78,8 +109,17 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
             comments: [],
             checklist: initializeChecklist(),
             lastActivity: new Date().toISOString(),
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            createdBy: user?.email || 'system'
         });
+
+        // Log activity
+        await logActivity('apartment_created', {
+            address: formData.address,
+            responsible: formData.responsible,
+            createdBy: user?.displayName || user?.email
+        });
+
         onClose();
     };
 
@@ -142,13 +182,23 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zuständigkeit</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                                Zuständigkeit {loadingTeam && '(Laden...)'}
+                            </label>
                             <select
                                 value={formData.responsible}
                                 onChange={e => setFormData({ ...formData, responsible: e.target.value as Responsible })}
                                 className="w-full bg-transparent font-black text-slate-800 text-lg outline-none cursor-pointer"
+                                disabled={loadingTeam}
                             >
-                                {TEAM_MEMBERS.map((m: string) => <option key={m} value={m}>{m}</option>)}
+                                {teamMembers.length === 0 && !loadingTeam && (
+                                    <option value="">Keine Benutzer verfügbar</option>
+                                )}
+                                {teamMembers.map((member) => (
+                                    <option key={member.id} value={member.displayName}>
+                                        {member.displayName}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
