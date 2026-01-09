@@ -1,16 +1,14 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Home } from "lucide-react"; // I need to verify if Home icon is exactly what was used. The SVGs in original were custom. I will use Lucide approximations.
-
+import { Plus, Building2 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useApartmentStore } from '@/store/useApartmentStore';
-import { LogOut, HelpCircle, Download, Settings } from 'lucide-react';
+import { HelpCircle, Download } from 'lucide-react';
 import { exportApartmentsToExcel } from '@/lib/exportUtils';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { NOTIFICATION_CONFIG } from '@/lib/notifications';
 import { useUISettings } from '@/store/useUISettings';
-import { logoutFromFirebase } from '@/lib/auth-logic';
+import { UserProfileDropdown } from './UserProfileDropdown';
 
 interface HeaderProps {
     onNewTermination: () => void;
@@ -18,16 +16,9 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onNewTermination }) => {
     const navigate = useNavigate();
-    const logout = useAuthStore((state: any) => state.logout);
     const apartments = useApartmentStore((state: any) => state.apartments);
     const addNotification = useNotificationStore(state => state.addNotification);
     const settings = useUISettings(state => state.settings);
-
-    const handleLogout = async () => {
-        await logoutFromFirebase();
-        logout();
-        navigate('/login');
-    }
 
     const handleExport = () => {
         exportApartmentsToExcel(apartments);
@@ -37,58 +28,60 @@ export const Header: React.FC<HeaderProps> = ({ onNewTermination }) => {
     }
 
     return (
-        <header className="bg-white border-b sticky top-0 z-40 px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg rotate-3">
-                    <Home className="w-7 h-7" />
-                </div>
-                <h1 className="text-3xl font-black tracking-tighter text-slate-800 uppercase">{settings.header.title}</h1>
-            </div>
-            <div className="flex flex-wrap gap-4 items-center justify-center">
-                <Button
-                    onClick={onNewTermination}
-                    size="lg"
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest text-sm h-auto py-3 px-8 order-last sm:order-none"
-                >
-                    <Plus className="w-5 h-5 mr-2" />
-                    {settings.header.newTermination}
-                </Button>
-                <div className="flex gap-2">
-                    <Button
-                        onClick={handleExport}
-                        variant="ghost"
-                        className="text-slate-500 font-bold hover:text-blue-600 gap-2 h-10 px-3"
-                        title={settings.header.export}
-                    >
-                        <Download className="w-5 h-5" />
-                        <span className="hidden lg:inline">{settings.header.export}</span>
-                    </Button>
-                    <Button
-                        onClick={() => navigate('/help')}
-                        variant="ghost"
-                        className="text-slate-500 font-bold hover:text-blue-600 gap-2 h-10 px-3"
-                        title={settings.header.help}
-                    >
-                        <HelpCircle className="w-5 h-5" />
-                        <span className="hidden lg:inline">{settings.header.help}</span>
-                    </Button>
-                    <Button
-                        onClick={() => navigate('/admin')}
-                        variant="ghost"
-                        className="text-slate-500 font-bold hover:text-blue-600 gap-2 h-10 px-3"
-                        title="Admin"
-                    >
-                        <Settings className="w-5 h-5" />
-                        <span className="hidden lg:inline">Admin</span>
-                    </Button>
-                    <Button
-                        onClick={handleLogout}
-                        variant="ghost"
-                        className="text-slate-500 font-bold hover:text-red-600 gap-2 h-10 px-3"
-                    >
-                        <LogOut className="w-5 h-5" />
-                        <span className="hidden lg:inline">{settings.header.logout}</span>
-                    </Button>
+        <header className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-sm">
+            <div className="px-6 py-4">
+                <div className="flex items-center justify-between gap-4">
+                    {/* Logo & Title */}
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50">
+                                <Building2 className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black text-slate-800 tracking-tight">{settings.header.title}</h1>
+                            <p className="text-xs text-slate-500 font-medium">Kündigungsverwaltung</p>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3">
+                        {/* Primary Action */}
+                        <Button
+                            onClick={onNewTermination}
+                            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold shadow-lg shadow-blue-200/50 transition-all hover:scale-105 active:scale-95 h-10 px-6"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            <span className="hidden sm:inline">{settings.header.newTermination}</span>
+                            <span className="sm:hidden">Neu</span>
+                        </Button>
+
+                        {/* Secondary Actions */}
+                        <div className="hidden md:flex items-center gap-1 bg-white rounded-xl border border-slate-200 p-1">
+                            <Button
+                                onClick={handleExport}
+                                variant="ghost"
+                                size="sm"
+                                className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg h-8 px-3"
+                                title={settings.header.export}
+                            >
+                                <Download className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                onClick={() => navigate('/help')}
+                                variant="ghost"
+                                size="sm"
+                                className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg h-8 px-3"
+                                title="Hilfe"
+                            >
+                                <HelpCircle className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        {/* User Profile Dropdown */}
+                        <UserProfileDropdown />
+                    </div>
                 </div>
             </div>
         </header>

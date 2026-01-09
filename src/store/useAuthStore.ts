@@ -1,10 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+interface UserProfile {
+    name: string; // email or username
+    email: string;
+    displayName?: string; // Full name
+    role: 'admin' | 'user';
+}
+
 interface AuthState {
     isAuthenticated: boolean;
-    user: { name: string; role: 'admin' | 'user' } | null;
-    login: (name: string, role?: 'admin' | 'user') => void;
+    user: UserProfile | null;
+    login: (email: string, role?: 'admin' | 'user', displayName?: string) => void;
     logout: () => void;
 }
 
@@ -13,9 +20,14 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             isAuthenticated: false,
             user: null,
-            login: (name: string, role: 'admin' | 'user' = 'user') => set({
+            login: (email: string, role: 'admin' | 'user' = 'user', displayName?: string) => set({
                 isAuthenticated: true,
-                user: { name, role }
+                user: {
+                    name: email,
+                    email,
+                    displayName: displayName || email.split('@')[0],
+                    role
+                }
             }),
             logout: () => set({ isAuthenticated: false, user: null }),
         }),
