@@ -38,7 +38,9 @@ export interface ChecklistItem {
 export interface Comment {
     text: string;
     timestamp: string;
-    user: string;
+    user: string; // Legacy field, kept for backward compatibility
+    author?: string; // Display name of the user who commented
+    authorEmail?: string; // Email of the user who commented
 }
 
 export interface Apartment {

@@ -11,6 +11,24 @@ interface UISettingsState {
     initialize: () => void;
 }
 
+export const DEFAULT_SETTINGS = {
+    header: {
+        title: 'HIT Flow',
+        newTermination: 'Neue Kündigung erfassen',
+        export: 'Daten Export',
+        help: 'Hilfe',
+        admin: 'Admin',
+        logout: 'Abmelden'
+    },
+    login: {
+        title: 'Willkommen bei HIT Flow',
+        subtitle: 'Melden Sie sich an, um fortzufahren',
+        emailPlaceholder: 'E-Mail-Adresse',
+        passwordPlaceholder: 'Passwort',
+        loginButton: 'Anmelden'
+    }
+};
+
 export const useUISettings = create<UISettingsState>((set, get) => ({
     settings: CONTENT,
     isLoading: true,

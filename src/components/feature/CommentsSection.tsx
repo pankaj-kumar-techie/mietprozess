@@ -55,7 +55,13 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ apartment, onA
                         <div key={i} className="bg-white p-5 rounded-3xl border-2 border-slate-50 shadow-sm group hover:border-indigo-100 transition-all">
                             <p className="text-slate-800 font-medium leading-relaxed mb-3">{c.text}</p>
                             <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>{c.user}</span>
+                                <span className="flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>
+                                    {c.author || c.user}
+                                    {c.authorEmail && (
+                                        <span className="text-[9px] normal-case opacity-70">({c.authorEmail})</span>
+                                    )}
+                                </span>
                                 <span>{formatDateTime(c.timestamp)}</span>
                             </div>
                         </div>
