@@ -5,8 +5,6 @@ import { Layout } from '@/components/dashboard/Layout';
 import { FilterBar } from '@/components/dashboard/FilterBar';
 import { KanbanBoard } from '@/components/dashboard/KanbanBoard';
 import { ApartmentList } from '@/components/dashboard/ApartmentList';
-
-// Placeholder modals - will be implemented next
 import { AddApartmentModal } from '@/components/modals/AddApartmentModal';
 import { ApartmentDetailsModal } from '@/components/modals/ApartmentDetailsModal';
 
@@ -25,19 +23,16 @@ export const Dashboard: React.FC = () => {
     const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(null);
     const [showArchived, setShowArchived] = useState(false);
 
-    // Real-time subscription - updates automatically without refresh!
+    // Real-time subscription
     useEffect(() => {
-        const unsubscribe = subscribeToApartments(() => {
-            // Data automatically updated in store
-        });
+        const unsubscribe = subscribeToApartments(() => { });
         return () => unsubscribe();
     }, [subscribeToApartments]);
 
-    // Filter apartments
+    // Filter AND Sort apartments
     const filteredApartments = apartments.filter(a => {
         // Archive filtering
         if (!showArchived) {
-            // Check if apartment should be archived (30 days after completion)
             if (a.completedAt) {
                 const completedDate = new Date(a.completedAt);
                 const now = new Date();
@@ -48,7 +43,6 @@ export const Dashboard: React.FC = () => {
             }
         }
 
-        // Search and responsibility filtering
         const s = searchTerm.toLowerCase();
         const matchSearch = !searchTerm ||
             a.address.toLowerCase().includes(s) ||
@@ -57,6 +51,11 @@ export const Dashboard: React.FC = () => {
             a.newTenant?.toLowerCase().includes(s);
         const matchResp = filterResponsible === 'Alle' || a.responsible === filterResponsible;
         return matchSearch && matchResp;
+    }).sort((a, b) => {
+        // Global Sorting: Chronological by Kündigung per date (nearest dates first)
+        if (!a.terminationDate) return 1;
+        if (!b.terminationDate) return -1;
+        return new Date(a.terminationDate).getTime() - new Date(b.terminationDate).getTime();
     });
 
     return (
@@ -73,7 +72,6 @@ export const Dashboard: React.FC = () => {
                     apartments={filteredApartments}
                     onStatusChange={(ap, newStatus) => {
                         const updates: any = { status: newStatus };
-                        // Rule 1: Set completedAt when moving to 'abgeschlossen'
                         if (newStatus === 'abgeschlossen' && !ap.completedAt) {
                             updates.completedAt = new Date().toISOString();
                         }
@@ -95,6 +93,16 @@ export const Dashboard: React.FC = () => {
                 <ApartmentDetailsModal
                     apartmentId={selectedApartmentId}
                     onClose={() => setSelectedApartmentId(null)}
+                    onNavigate={(direction) => {
+                        const currentIndex = filteredApartments.findIndex(a => a.id === selectedApartmentId);
+                        if (currentIndex === -1) return;
+
+                        let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+                        if (nextIndex >= filteredApartments.length) nextIndex = 0;
+                        if (nextIndex < 0) nextIndex = filteredApartments.length - 1;
+
+                        setSelectedApartmentId(filteredApartments[nextIndex].id);
+                    }}
                 />
             )}
         </Layout>

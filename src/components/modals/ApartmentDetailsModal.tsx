@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { useApartmentStore } from '@/store/useApartmentStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -13,9 +14,10 @@ import { logActivity } from '@/services/userService';
 interface ApartmentDetailsModalProps {
     apartmentId: string;
     onClose: () => void;
+    onNavigate?: (direction: 'next' | 'prev') => void;
 }
 
-export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ apartmentId, onClose }) => {
+export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ apartmentId, onClose, onNavigate }) => {
     const { apartments, updateApartment } = useApartmentStore();
     const user = useAuthStore(state => state.user);
     const apartment = apartments.find(a => a.id === apartmentId);
@@ -108,6 +110,24 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
                         </div>
                     </div>
                 </div>
+
+                {/* Fast Navigation Arrows */}
+                {onNavigate && (
+                    <>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onNavigate('prev'); }}
+                            className="fixed left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95 group"
+                        >
+                            <svg className="w-8 h-8 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onNavigate('next'); }}
+                            className="fixed right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95 group"
+                        >
+                            <svg className="w-8 h-8 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                    </>
+                )}
             </div>
 
             <NewTenantPopup
