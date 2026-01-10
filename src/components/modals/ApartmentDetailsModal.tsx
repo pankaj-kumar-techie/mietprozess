@@ -32,7 +32,9 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
         // Check gating
         const currIdx = STATUS_OPTIONS.indexOf(apartment.status);
         const newIdx = STATUS_OPTIONS.indexOf(newStatus);
-        if (newIdx > currIdx && !isStatusComplete(apartment, apartment.status)) {
+        const isAdmin = user?.role === 'admin';
+
+        if (newIdx > currIdx && !isStatusComplete(apartment, apartment.status) && !isAdmin) {
             alert(`Bevor Sie zum Status "${newStatus}" wechseln können, müssen erst alle Aufgaben unter "${apartment.status}" erledigt sein.`);
             return;
         }

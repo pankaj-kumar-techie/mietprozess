@@ -153,19 +153,6 @@ export const AdminUsersPage = () => {
                         </div>
                         <div className="flex gap-2">
                             <Button
-                                onClick={async () => {
-                                    if (confirm('Achtung: Dies fügt Testdaten hinzu. Fortfahren?')) {
-                                        const { seedDatabase } = await import('@/services/adminService');
-                                        await seedDatabase();
-                                        alert('Daten erfolgreich generiert!');
-                                    }
-                                }}
-                                variant="outline"
-                                className="gap-2 border-2 border-purple-100 bg-purple-50 text-purple-700 rounded-xl h-11 px-6 hover:bg-purple-100"
-                            >
-                                <span className="font-bold">QA Data Load</span>
-                            </Button>
-                            <Button
                                 onClick={() => navigate('/admin')}
                                 variant="outline"
                                 className="gap-2 border-2 rounded-xl h-11 px-6"

@@ -12,7 +12,10 @@ export const isStatusComplete = (apartment: Apartment, statusName: string): bool
 
     for (const item of apartment.checklist) {
         if (item.type === 'header') {
-            if (item.text === statusName) { inSection = true; continue; }
+            if (item.text === statusName) {
+                inSection = true;
+                continue;
+            }
             else if (inSection) break; // End of section
         }
         if (inSection) {
@@ -27,8 +30,10 @@ export const isStatusComplete = (apartment: Apartment, statusName: string): bool
             }
         }
     }
-    // If no items in section, arguably it's complete? Or not. Assuming >0 check is safer.
-    return itemsInSection > 0 && itemsInSection === itemsCompleted;
+
+    // If no items in section, we don't block the move (Section is considered "complete" or "empty")
+    // This prevents deadlocks if a status name doesn't have a matching header in the checklist.
+    return itemsInSection === 0 || itemsInSection === itemsCompleted;
 };
 
 /**
@@ -36,15 +41,11 @@ export const isStatusComplete = (apartment: Apartment, statusName: string): bool
  * Returns true if the apartment is "Abgeschlossen" AND completed > 30 days ago.
  */
 export const shouldArchive = (apartment: Apartment): boolean => {
-    if (apartment.status !== 'Abgeschlossen' && apartment.status !== 'Archiviert') return false; // Only completed/archived can be hidden
-    // Note: status 'Archiviert' is a UI columns concept, but logic might just check date.
+    if (apartment.status !== 'Abgeschlossen' && apartment.status !== 'Archiviert') return false;
 
-    // Rule 3 Update: Handle legacy data (missing completedAt)
-    // If completedAt is missing, use lastActivity as the proxy for completion time.
-    // If that's missing too, use createdAt.
+    // Handle legacy data (missing completedAt)
     const dateToCheck = apartment.completedAt || apartment.lastActivity || apartment.createdAt;
-
-    if (!dateToCheck) return false; // Should not happen, but keep visible just in case
+    if (!dateToCheck) return false;
 
     const daysSince = differenceInDays(new Date(), new Date(dateToCheck));
     return daysSince >= 30;
@@ -54,8 +55,8 @@ export const shouldArchive = (apartment: Apartment): boolean => {
  * Global Filter Logic: Should this apartment be visible?
  */
 export const isApartmentVisible = (apartment: Apartment, showArchived: boolean): boolean => {
-    if (showArchived) return true; // Show everything
-    return !shouldArchive(apartment); // Hide if it meets archive criteria
+    if (showArchived) return true;
+    return !shouldArchive(apartment);
 };
 
 /**
@@ -64,23 +65,21 @@ export const isApartmentVisible = (apartment: Apartment, showArchived: boolean):
  */
 export const sortApartmentsByDate = (apartments: Apartment[]): Apartment[] => {
     return [...apartments].sort((a, b) => {
-        if (!a.terminationDate) return 1; // No date -> end
+        if (!a.terminationDate) return 1;
         if (!b.terminationDate) return -1;
-
         return new Date(a.terminationDate).getTime() - new Date(b.terminationDate).getTime();
     });
 };
+
 /**
  * Automated Progression: What is the next status if the current one is complete?
  */
 export const getAutoNextStatus = (apartment: Apartment): string | null => {
-    // 1. Identify current status index
     const statusOrder: string[] = ['In Kündigung', 'In Vermietung', 'Mietvertrag erstellt', 'Wohnung übergeben', 'Abgeschlossen'];
     const currentIndex = statusOrder.indexOf(apartment.status);
 
-    if (currentIndex === -1 || currentIndex === statusOrder.length - 1) return null; // Unknown or Final
+    if (currentIndex === -1 || currentIndex === statusOrder.length - 1) return null;
 
-    // 2. Check complete
     if (isStatusComplete(apartment, apartment.status)) {
         return statusOrder[currentIndex + 1];
     }

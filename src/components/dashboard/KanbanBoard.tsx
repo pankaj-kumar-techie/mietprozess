@@ -23,6 +23,7 @@ import { KanbanColumn } from './KanbanColumn';
 import { ApartmentCard } from '@/components/feature/ApartmentCard'; // For overlay
 import { isStatusComplete } from '@/lib/logic';
 import { useNotificationStore } from '@/store/useNotificationStore';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface KanbanBoardProps {
     apartments: Apartment[];
@@ -44,6 +45,7 @@ const dropAnimation: DropAnimation = {
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusChange, onCardClick, onCardDelete }) => {
     const [activeId, setActiveId] = useState<string | null>(null);
     const addNotification = useNotificationStore(state => state.addNotification);
+    const user = useAuthStore(state => state.user);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -62,7 +64,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
 
     const handleDragOver = () => {
         // Only verify over logic if needed for visual placeholders, 
-        // but DndKit handles sortable shuffling automatically if setup right.
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -74,8 +75,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
             return;
         }
 
-        // Determine target column
-        // The 'over' id can be a column status (droppable) or another card (sortable)
         let targetStatus: Status | undefined;
 
         if (STATUS_OPTIONS.includes(over.id as any)) {
@@ -93,29 +92,19 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
 
             // Rule 2 Check: Forward Move Validation
             if (targetIndex > currentIndex) {
-                // Try to check if current status constitutes "complete"
-                // Note: 'isStatusComplete' checks if a *Checklist Section* is complete.
-                // We assume the checklist section name MUST match the status name for this mapping to work.
-                // Usually they are 1:1 mapped in HIT Flow logic.
-
-                const currentStatusName = activeAp.status; // e.g. "In Kündigung"
-                // We pass logic to check if this specific section is done
-                // However, "isStatusComplete" usually takes (apartment, statusName)
-                // Let's assume isStatusComplete works as intended.
-
-                // WARNING: isStatusComplete might be just for one section. Rule says "100% complete".
-                // If isStatusComplete returns true, we allow.
-
+                const currentStatusName = activeAp.status;
                 const canMove = isStatusComplete(activeAp, currentStatusName);
+                const isAdmin = user?.role === 'admin';
 
-                if (canMove) {
+                // Admin Override Logic
+                if (canMove || isAdmin) {
                     onStatusChange(activeAp, targetStatus);
                 } else {
                     addNotification(`Aufgaben für "${currentStatusName}" noch nicht vollständig!`, 'error');
                     return; // Block move
                 }
             } else {
-                // Backward move is always allowed (Rule 2)
+                // Backward move is always allowed
                 onStatusChange(activeAp, targetStatus);
             }
         }
@@ -130,7 +119,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
             sensors={sensors}
             collisionDetection={closestCorners}
             onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
             <div className="flex-1 overflow-x-auto p-8 pt-4 flex gap-8 min-h-0 custom-scrollbar h-full">
@@ -138,9 +126,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
                     <KanbanColumn
                         key={status}
                         status={status}
-                        // PERFORMANCE OPTIMIZATION:
-                        // For 'Archiviert', we limit to the recent 50 items to prevent UI freezes
-                        // when the archive grows large over time. This ensures the board remains responsive.
                         apartments={
                             status === 'Archiviert'
                                 ? apartments

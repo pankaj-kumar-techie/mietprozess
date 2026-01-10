@@ -7,7 +7,7 @@ import { Login } from '@/pages/Login';
 import { Help } from '@/pages/Help';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
-import { TestRunnerPage } from '@/pages/admin/TestRunnerPage'; // Import New Page
+import { TestRunnerPage } from '@/pages/admin/TestRunnerPage';
 import { Profile } from '@/pages/Profile';
 import { NotificationsPage } from '@/pages/NotificationsPage';
 import { NotFound } from '@/pages/NotFound';

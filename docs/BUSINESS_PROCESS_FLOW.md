@@ -1,6 +1,6 @@
 # HIT Flow – Business Logic & System Guide
 
-**Current Version:** 1.2
+**Current Version:** 1.3
 **Last Updated:** 2026-01-10
 
 This document serves as the **Single Source of Truth** for the "HIT Flow" application. It defines exactly how the system behaves, the rules for moving properties between stages, and the automation logic (e.g., Archiving).
@@ -39,51 +39,44 @@ The system is designed to automate manual tasks and keep the board clean.
 *   **Logic:**
     *   When you check the **last item** in a checklist (100% complete)...
     *   ...The system **automatically prompts** to move to the next status.
-    *   *Example:* Completing the "In Kündigung" checklist automatically suggests moving to "In Vermietung".
-
-### Rule C: Forward Validations
-*   **Concept:** You cannot move forward if you haven't done your homework.
-*   **Logic:**
-    *   You are prevented from dragging a card to the next column **IF** mandatory checklist items in the current column are unchecked.
-    *   *Note:* Admins can override this, but standard users cannot.
 
 ---
 
-## 3. Data Integrity & Safety
+## 3. UI/UX Standards & Traffic Lights
+
+The system uses a strictly defined color system to communicate urgency and status.
+
+### Color System
+*   **Green:** Success / New Tenant / Process Completed.
+*   **Red:** Warning / Termination Notice / Urgent Action.
+*   **Blue:** Informational / Active Elements / Current User.
+*   **Gray:** History / Inactive / Archived.
+
+### Activity Monitor (Traffic Lights)
+Every property card shows a "Days Inactive" counter based on the last update.
+*   **< 7 Days:** **Black text** (Normal activity).
+*   **7 - 14 Days:** **Yellow text** (Warning: Action might be needed).
+*   **> 15 Days:** **Red text** (Critical: Urgent follow-up required).
+
+---
+
+## 4. Forward Validations & Security
+
+### Checklist Gating
+*   **Rule:** Standard users **cannot** move a card to the next column if the mandatory checklist items in the current column are incomplete.
+*   **Admin Override:** Administrators have the privilege to **bypass** these gates. If an Admin moves a card, the system allows it even if the checklist is not 100% done.
 
 ### Deletion Safety
 *   **Feature:** Double-Confirmation.
-*   **Behavior:** Clicking "Delete" (Trash Icon) does **NOT** delete immediately.
-*   **Safety Net:** A modal appears asking "Sind Sie sicher?". You must click "Ja, löschen" to confirm. This prevents accidental data loss.
-
-### New Tenant "Lock"
-*   **Feature:** Mandatory Tenant Info.
-*   **Behavior:** When moving to Stage 3 ("In Prüfung"), the system **requires** you to enter the New Tenant's name.
-*   **Why?** We cannot prepare a contract without a name. The system ensures this data is captured at the exact right moment.
+*   **Behavior:** Clicking "Delete" (Trash Icon) does **NOT** delete immediately. A confirmation modal appears asking "Sind Sie sicher?".
 
 ---
 
-## 4. Sorting & Views
+## 5. Required Data Points
 
-*   **Global Sorting:** Properties are ALWAYS sorted by **Termination Date** (Kündigungsdatum).
-    *   *Urgency:* Dates closer to today (or in the past) appear at the **TOP**. Default: Ascending.
-*   **Filtering:** You can filter by "Responsible Person" (Zuständig) or Search (Text).
-
----
-
-## 5. UI/UX Standards
-
-*   **Language:** All interface text is in **German** (Formal).
-*   **Colors:**
-    *   **Green:** Success / New Tenant / Done.
-    *   **Red:** Warning / Termination / Delayed.
-    *   **Blue:** Information / Active User.
-    *   **Gray:** Inactive / Archived.
-*   **Traffic Lights (Activity Monitor):**
-    *   Properties show a small "Days inactive" counter.
-    *   **< 7 Days:** Black (Normal).
-    *   **7-14 Days:** Yellow (Warning).
-    *   **> 15 Days:** Red (Critical - Needs Action).
+*   **New Tenant:** Mandatory when moving to Stage 3 or Stage 4. 
+*   **Termination Date:** Mandatory for creating any new entry.
+*   **Responsible Person:** Mandatory for every property.
 
 ---
 
