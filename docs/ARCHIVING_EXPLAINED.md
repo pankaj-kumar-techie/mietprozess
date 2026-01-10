@@ -1,33 +1,29 @@
-# Archiving Logic Explained
+# Archiving vs. Completion: Implementation Details
 
-This document explains why and when properties disappear from the main board (Archive).
+It is important to understand the difference between a property being **"Completed"** (Abgeschlossen) and being **"Archived"**.
 
-## The Core Rule
-A property is automatically hidden (Archived) ONLY if it meets **BOTH** conditions:
+## 1. Status: Completed (Abgeschlossen)
+*   **What it is:** This is a **Work Status**. It means "We are finished working on this apartment."
+*   **Behavior:**
+    *   The apartment moves to the gray "Abgeschlossen" column.
+    *   **It remains visible on the board.**
+    *   This is intentional. It allows your team to see what was achieved recently (e.g., this month's successes) without searching.
 
-1.  **Status is "Completed"**: The termination process must be 100% finished (Status: *Abgeschlossen*).
-2.  **Time Passed**: It has been more than **30 Days** since it was finished.
+## 2. State: Archived
+*   **What it is:** This is a **System State** (Hidden). It means "This record is old and we don't need to see it every day."
+*   **Behavior:**
+    *   The apartment is **hidden** from the main view.
+    *   **Trigger:** This happens automatically exactly **30 days** after the work was completed.
+    *   This keeps the board clean and fast, ensuring you only focus on active or recently finished tasks.
 
-## Why can I still see old properties?
+| Feature | Completed (Abgeschlossen) | Archived (Hidden) |
+| :--- | :--- | :--- |
+| **Concept** | "The work is done." | "The record is filed away." |
+| **Visible?** | **YES** (On the board) | **NO** (Hidden by default) |
+| **Trigger** | Manual (You check the list) | Automatic (30 days later) |
+| **Goal** | Track progress & success. | Declutter workspace. |
 
-If you see a property created 2-3 months ago on your board, it is visible for one of these reasons:
-
-### Reason 1: It is NOT "Completed"
-Even if a property is very old (e.g., from last year), if the status is still **"Active"** (e.g., *In Kündigung* or *In Vermietung*), it will **NEVER** be archived.
-*   **Why?** The system thinks you are still working on it.
-*   **Fix:** If you are done, move it to the **Completed** column.
-
-### Reason 2: It is "Completed" but recent
-If you moved it to "Completed" just yesterday, it will stay visible for 29 more days.
-*   **Why?** This allows you to quickly check recent work without digging into the archive.
-
-### Reason 3: Legacy Data (Fixed)
-*   **Issue:** Older data created before this system might not have a "Completion Date" recorded.
-*   **Solution:** We have updated the system. If the "Completion Date" is missing, the system now looks at the **"Last Activity Date"**.
-    *   *Example:* If a property was marked "Completed" 3 months ago but had no date, the system now sees "Last Activity: 3 months ago" and will correctly archive it immediately.
-
-## How to see Archived properties?
-You can find old data at any time:
-1.  Go to the Dashboard.
-2.  Click the **"Archiv anzeigen"** (Show Archive) toggle button in the top filter bar.
-3.  Hidden properties will reappear in the gray "Archive" column.
+## 3. The "Archiviert" Column
+You might see a column named *Archiviert*.
+*   If you toggle **"Show Archive"** (Archiv anzeigen), all the hidden/old items will appear here.
+*   You can also manually drag items here if you want to explicitly categorize them as archived, but the system primarily relies on the **30-day timer** to keep things tidy automatically.
