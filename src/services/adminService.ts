@@ -1,27 +1,24 @@
-
-import { collection, addDoc, writeBatch, doc } from 'firebase/firestore';
+import { collection, writeBatch, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { STATUS_OPTIONS, type Status, type Apartment } from '@/types';
+import { type Apartment } from '@/types';
 
 // QA Test Dataset emphasizing different stages and edge cases
 export const QA_TEST_DATA: Partial<Apartment>[] = [
-    // 1. FRESH CASE (In Kündigung) - "The Newbie"
-    // Tests: Creation, Initial Fields, Red Status
+    // 1. FRESH CASE (In Kündigung) - BLACK Traffic Light (< 7 days)
     {
         address: "Seestrasse 145, 8002 Zürich",
         objectName: "3.5 Zimmer, 2. OG Links",
         oldTenant: "Michael Weber",
         terminationDate: "2024-06-30",
         status: "In Kündigung",
-        responsible: "Pahariyatri", // Assuming current user
-        relettingOption: "Nachmieter gesucht",
-        lastActivity: new Date().toISOString(), // Green Traffic Light
-        checklist: [], // Will be initialized by service logic
+        responsible: "Pahariyatri",
+        relettingOption: "Ja Weitervermietung",
+        lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago -> BLACK
+        checklist: [],
         comments: []
     },
 
-    // 2. STUCK CASE (In Vermietung) - "The Problem Child"
-    // Tests: Yellow/Red Traffic Light (Older date), Comments indicator
+    // 2. WARNING CASE (In Vermietung) - YELLOW Traffic Light (7-14 days)
     {
         address: "Bahnhofstrasse 10, 8001 Zürich",
         objectName: "Gewerbe 120m2",
@@ -29,8 +26,8 @@ export const QA_TEST_DATA: Partial<Apartment>[] = [
         terminationDate: "2024-05-31",
         status: "In Vermietung",
         responsible: "Sarah",
-        relettingOption: "Regulär",
-        // Late update (simulating 10 days ago -> Yellow light)
+        relettingOption: "Ja Weitervermietung",
+        // Late update (simulating 10 days ago -> YELLOW light)
         lastActivity: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
         checklist: [],
         comments: [
@@ -43,25 +40,22 @@ export const QA_TEST_DATA: Partial<Apartment>[] = [
         ]
     },
 
-    // 3. READY TO SIGN (Mietvertrag erstellt) - "The Success"
-    // Tests: Forward movement logic, checklist completion
+    // 3. CRITICAL CASE (In Prüfung) - RED Traffic Light (> 15 days)
     {
         address: "Langstrasse 40, 8004 Zürich",
         objectName: "2.0 Zimmer Loft",
         oldTenant: "Lisa Mueller",
         terminationDate: "2024-04-30",
-        status: "Mietvertrag erstellt",
+        status: "In Vermietung",
         responsible: "Pahariyatri",
-        relettingOption: "Nachmieter vorhanden",
-        newTenant: "Felix Muster", // Tenant found!
-        rentalStart: "2024-05-01",
-        lastActivity: new Date().toISOString(),
+        relettingOption: "Nein Nachmieter vorhanden",
+        // Critical inactivity (simulating 20 days ago -> RED light)
+        lastActivity: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
         checklist: [],
         comments: []
     },
 
-    // 4. OLD ARCHIVE (Abgeschlossen) - "The Ghost"
-    // Tests: Archiving logic (Should be hidden unless filter active)
+    // 4. OLD ARCHIVE (Abgeschlossen) - ARCHIVED
     {
         address: "Rigiweg 8, 8006 Zürich",
         objectName: "4.5 Zimmer Attika",
@@ -82,17 +76,19 @@ export const seedDatabase = async () => {
     const batch = writeBatch(db);
     const collectionRef = collection(db, 'apartments');
 
-    console.log("Starting QA Data Seed...");
+    console.log("Starting QA Data Seed with Traffic Light test cases...");
 
     for (const data of QA_TEST_DATA) {
-        // We create a new doc ref for each
         const docRef = doc(collectionRef);
 
-        // Basic checklist structure (light version for seed)
+        // Extended checklist with Milestone IDs to fix Issue A
         const dummyChecklist = [
-            { type: 'header', text: 'In Kündigung', completed: false },
-            { type: 'checkbox', text: 'Kündigungsbestätigung verschickt', completed: data.status !== 'In Kündigung' }, // Mark done if advanced
-            { type: 'header', text: 'In Vermietung', completed: false }
+            { type: 'header', text: 'In Kündigung' },
+            { type: 'checkbox', text: 'Kündigungsbestätigung verschickt', completed: true },
+            { type: 'spacer' },
+            { type: 'header', text: 'In Vermietung' },
+            { type: 'checkbox', text: 'Inserat erstellen', completed: true },
+            { id: 'contract_signed', type: 'checkbox', text: 'Mietvertrag unterzeichnet retour', completed: false }
         ];
 
         const finalData = {
@@ -107,5 +103,5 @@ export const seedDatabase = async () => {
     }
 
     await batch.commit();
-    console.log("✅ QA Data Seeded Successfully!");
+    console.log("✅ QA Data Seeded Successfully with Traffic Light logic cases!");
 };

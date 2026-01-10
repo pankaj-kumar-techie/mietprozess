@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import type { Apartment } from '@/types';
 import { apartmentService } from '@/services/apartmentService';
@@ -8,6 +9,7 @@ interface ApartmentState {
     error: string | null;
     filterResponsible: string;
     searchTerm: string;
+    pendingIds: Set<string>; // Track operations to fix Issue B (Flickering)
 
     fetchApartments: () => Promise<void>;
     subscribeToApartments: (callback: (apartments: Apartment[]) => void) => () => void;
@@ -24,6 +26,7 @@ export const useApartmentStore = create<ApartmentState>((set, get) => ({
     error: null,
     filterResponsible: 'Alle',
     searchTerm: '',
+    pendingIds: new Set(),
 
     fetchApartments: async () => {
         set({ loading: true, error: null });
@@ -35,73 +38,122 @@ export const useApartmentStore = create<ApartmentState>((set, get) => ({
         }
     },
 
-    // Real-time subscription for instant updates
     subscribeToApartments: (callback) => {
-        return apartmentService.subscribeToApartments((apartments) => {
-            set({ apartments, loading: false });
-            callback(apartments);
+        return apartmentService.subscribeToApartments((newApartments) => {
+            const { pendingIds, apartments: currentApartments } = get();
+
+            // FIX ISSUE B: Merge strategy to prevent flickering
+            // If an ID is pending (optimistic update), we keep the local version
+            // until the server version catches up or we stop being pending.
+            const merged = newApartments.map(newAp => {
+                if (pendingIds.has(newAp.id)) {
+                    const local = currentApartments.find(a => a.id === newAp.id);
+                    return local || newAp;
+                }
+                return newAp;
+            });
+
+            set({ apartments: merged, loading: false });
+            callback(merged);
         });
     },
 
     addApartment: async (apartment) => {
+        const tempId = 'temp-' + Date.now();
         try {
-            // Optimistic update
-            const tempId = 'temp-' + Date.now();
             const tempApartment = { id: tempId, ...apartment } as Apartment;
-            set(state => ({ apartments: [...state.apartments, tempApartment] }));
+            set(state => ({
+                apartments: [...state.apartments, tempApartment],
+                pendingIds: new Set(state.pendingIds).add(tempId)
+            }));
 
-            // Real update
             const newAp = await apartmentService.createApartment(apartment);
 
-            // Replace temp with real
-            set(state => ({
-                apartments: state.apartments.map(a => a.id === tempId ? newAp : a)
-            }));
+            set(state => {
+                const nextPending = new Set(state.pendingIds);
+                nextPending.delete(tempId);
+                return {
+                    apartments: state.apartments.map(a => a.id === tempId ? newAp : a),
+                    pendingIds: nextPending
+                };
+            });
         } catch (err: any) {
-            // Rollback on error
-            set(state => ({
-                apartments: state.apartments.filter(a => !a.id.startsWith('temp-')),
-                error: err.message
-            }));
+            set(state => {
+                const nextPending = new Set(state.pendingIds);
+                nextPending.delete(tempId);
+                return {
+                    apartments: state.apartments.filter(a => a.id !== tempId),
+                    pendingIds: nextPending,
+                    error: err.message
+                };
+            });
             throw err;
         }
     },
 
     updateApartment: async (id, updates) => {
+        const originalApartments = get().apartments;
         try {
-            // Optimistic update
+            // Optimistic update + Add to pending
             set(state => ({
                 apartments: state.apartments.map(a =>
                     a.id === id ? { ...a, ...updates } : a
-                )
+                ),
+                pendingIds: new Set(state.pendingIds).add(id)
             }));
 
-            // Real update
             await apartmentService.updateApartment(id, updates);
+
+            // Remove from pending after short delay to allow Firestore to sync
+            setTimeout(() => {
+                set(state => {
+                    const nextPending = new Set(state.pendingIds);
+                    nextPending.delete(id);
+                    return { pendingIds: nextPending };
+                });
+            }, 1000);
+
         } catch (err: any) {
-            // Rollback and refetch on error
-            get().fetchApartments();
-            set({ error: err.message });
+            set({
+                apartments: originalApartments,
+                error: err.message
+            });
+            set(state => {
+                const nextPending = new Set(state.pendingIds);
+                nextPending.delete(id);
+                return { pendingIds: nextPending };
+            });
         }
     },
 
     deleteApartment: async (id) => {
+        const originalApartments = get().apartments;
         try {
-            // Optimistic delete
             set(state => ({
-                apartments: state.apartments.filter(a => a.id !== id)
+                apartments: state.apartments.filter(a => a.id !== id),
+                pendingIds: new Set(state.pendingIds).add(id)
             }));
 
-            // Real delete
             await apartmentService.deleteApartment(id);
+
+            set(state => {
+                const nextPending = new Set(state.pendingIds);
+                nextPending.delete(id);
+                return { pendingIds: nextPending };
+            });
         } catch (err: any) {
-            // Rollback on error
-            get().fetchApartments();
-            set({ error: err.message });
+            set({
+                apartments: originalApartments,
+                error: err.message
+            });
+            set(state => {
+                const nextPending = new Set(state.pendingIds);
+                nextPending.delete(id);
+                return { pendingIds: nextPending };
+            });
         }
     },
 
     setFilterResponsible: (responsible) => set({ filterResponsible: responsible }),
     setSearchTerm: (term) => set({ searchTerm: term }),
 }));
-

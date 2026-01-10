@@ -20,7 +20,7 @@ import { createPortal } from 'react-dom';
 import { STATUS_OPTIONS } from '@/types';
 import type { Apartment, Status } from '@/types';
 import { KanbanColumn } from './KanbanColumn';
-import { ApartmentCard } from '@/components/feature/ApartmentCard'; // For overlay
+import { ApartmentCard } from '@/components/feature/ApartmentCard';
 import { isStatusComplete } from '@/lib/logic';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -50,7 +50,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 5, // Require slight movement to prevent drag on click
+                distance: 5,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -60,10 +60,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
-    };
-
-    const handleDragOver = () => {
-        // Only verify over logic if needed for visual placeholders, 
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -90,21 +86,18 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
             const currentIndex = STATUS_OPTIONS.indexOf(activeAp.status);
             const targetIndex = STATUS_OPTIONS.indexOf(targetStatus);
 
-            // Rule 2 Check: Forward Move Validation
             if (targetIndex > currentIndex) {
                 const currentStatusName = activeAp.status;
                 const canMove = isStatusComplete(activeAp, currentStatusName);
                 const isAdmin = user?.role === 'admin';
 
-                // Admin Override Logic
                 if (canMove || isAdmin) {
                     onStatusChange(activeAp, targetStatus);
                 } else {
                     addNotification(`Aufgaben für "${currentStatusName}" noch nicht vollständig!`, 'error');
-                    return; // Block move
+                    return;
                 }
             } else {
-                // Backward move is always allowed
                 onStatusChange(activeAp, targetStatus);
             }
         }
@@ -121,7 +114,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex-1 overflow-x-auto p-8 pt-4 flex gap-8 min-h-0 custom-scrollbar h-full">
+            <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 sm:p-8 pt-2 sm:pt-4 flex gap-4 sm:gap-8 min-h-0 custom-scrollbar h-full bg-slate-50/50">
                 {STATUS_OPTIONS.map(status => (
                     <KanbanColumn
                         key={status}
@@ -143,12 +136,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
             {createPortal(
                 <DragOverlay dropAnimation={dropAnimation}>
                     {activeApartment ? (
-                        <ApartmentCard
-                            apartment={activeApartment}
-                            onClick={() => { }}
-                            onDelete={(e) => e.preventDefault()}
-                            isDragging
-                        />
+                        <div className="scale-105 rotate-2 shadow-2xl opacity-90 cursor-grabbing">
+                            <ApartmentCard
+                                apartment={activeApartment}
+                                onClick={() => { }}
+                                onDelete={(e) => e.preventDefault()}
+                                isDragging
+                            />
+                        </div>
                     ) : null}
                 </DragOverlay>,
                 document.body

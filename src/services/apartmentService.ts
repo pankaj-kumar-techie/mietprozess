@@ -177,7 +177,6 @@ export const apartmentService = {
         const docRef = doc(db, COLLECTION_NAME, id);
 
         // Ideally fetch data first to log detailed message
-        let address = id;
         try {
             // we could getDoc here but let's just log deletion
         } catch (e) { }

@@ -29,6 +29,7 @@ export interface SubItem {
 }
 
 export interface ChecklistItem {
+    id?: string; // Optional ID for programmatic triggers (e.g., 'contract_signed')
     type: ChecklistItemType;
     text?: string;
     completed?: boolean;

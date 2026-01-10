@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useApartmentStore } from '@/store/useApartmentStore';
 import { Layout } from '@/components/dashboard/Layout';
 import { FilterBar } from '@/components/dashboard/FilterBar';
@@ -32,40 +32,38 @@ export const Dashboard: React.FC = () => {
         return () => unsubscribe();
     }, [subscribeToApartments]);
 
-    // Filter AND Sort apartments
-    const filteredApartments = apartments.filter(a => {
-        // Archive filtering
-        if (!showArchived) {
-            // Use centralized logic (handles legacy data with missing completedAt)
-            if (shouldArchive(a)) {
-                return false; // Hide archived apartments
+    // FIX ISSUE C: Use useMemo for heavy filter/map/sort operations
+    // This scales to 500+ items without performance lag on every re-render.
+    const filteredApartments = useMemo(() => {
+        return apartments.filter(a => {
+            // Archive filtering
+            if (!showArchived) {
+                if (shouldArchive(a)) {
+                    return false;
+                }
             }
-        }
 
-        const s = searchTerm.toLowerCase();
-        const matchSearch = !searchTerm ||
-            a.address.toLowerCase().includes(s) ||
-            a.oldTenant.toLowerCase().includes(s) ||
-            a.objectName.toLowerCase().includes(s) ||
-            a.newTenant?.toLowerCase().includes(s);
-        const matchResp = filterResponsible === 'Alle' || a.responsible === filterResponsible;
-        return matchSearch && matchResp;
-    }).map(a => {
-        // Visual Transformation for Archive View
-        // If we are showing the archive, and an item IS archived (by logic),
-        // we force its displayed status to 'Archiviert'.
-        // This ensures it appears solely in the gray 'Archiviert' column
-        // and does not clutter the 'Abgeschlossen' column.
-        if (showArchived && shouldArchive(a)) {
-            return { ...a, status: 'Archiviert' as const };
-        }
-        return a;
-    }).sort((a, b) => {
-        // Global Sorting: Chronological by Kündigung per date (nearest dates first)
-        if (!a.terminationDate) return 1;
-        if (!b.terminationDate) return -1;
-        return new Date(a.terminationDate).getTime() - new Date(b.terminationDate).getTime();
-    });
+            const s = searchTerm.toLowerCase();
+            const matchSearch = !searchTerm ||
+                a.address.toLowerCase().includes(s) ||
+                a.oldTenant.toLowerCase().includes(s) ||
+                a.objectName.toLowerCase().includes(s) ||
+                a.newTenant?.toLowerCase().includes(s);
+            const matchResp = filterResponsible === 'Alle' || a.responsible === filterResponsible;
+            return matchSearch && matchResp;
+        }).map(a => {
+            // Visual Transformation for Archive View
+            if (showArchived && shouldArchive(a)) {
+                return { ...a, status: 'Archiviert' as const };
+            }
+            return a;
+        }).sort((a, b) => {
+            // Global Sorting: Chronological by Kündigung per date
+            if (!a.terminationDate) return 1;
+            if (!b.terminationDate) return -1;
+            return new Date(a.terminationDate).getTime() - new Date(b.terminationDate).getTime();
+        });
+    }, [apartments, showArchived, searchTerm, filterResponsible]);
 
     return (
         <Layout onNewTermination={() => setShowAddModal(true)}>

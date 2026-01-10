@@ -7,6 +7,7 @@ import { getTeamMembers, type TeamMember } from '@/services/teamService';
 import { logActivity } from '@/services/userService';
 
 // Basic checklist schema to initialize
+// Added 'contract_signed' ID to fix Issue A
 const DEFAULT_CHECKLIST_SCHEMA: ChecklistItem[] = [
     { type: 'header', text: 'In Kündigung' },
     { type: 'checkbox', text: 'Eigentümer informiert' },
@@ -27,7 +28,7 @@ const DEFAULT_CHECKLIST_SCHEMA: ChecklistItem[] = [
     { type: 'checkbox', text: 'Besichtigungen durchführen' },
     { type: 'checkbox', text: 'Prüfen Referenzen, OK von Eigentümer' },
     { type: 'checkbox', text: 'Mietvertrag inkl. Beilagen und Kaution verschickt' },
-    { type: 'checkbox', text: 'Mietvertrag unterzeichnet retour' },
+    { id: 'contract_signed', type: 'checkbox', text: 'Mietvertrag unterzeichnet retour' },
     { type: 'checkbox', text: 'Inserat archiviert bzw. bei Flatfox "entfernt"' },
     { type: 'spacer' },
     { type: 'header', text: 'Mietvertrag erstellt' },

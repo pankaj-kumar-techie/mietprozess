@@ -1,5 +1,5 @@
 
-import { isStatusComplete, shouldArchive, isApartmentVisible, sortApartmentsByDate, getAutoNextStatus } from './logic';
+import { isStatusComplete, shouldArchive, sortApartmentsByDate, getAutoNextStatus } from './logic';
 import type { Apartment, ChecklistItem } from '@/types';
 
 // Mock Data Generators
@@ -11,6 +11,7 @@ const createMockApartment = (overrides: Partial<Apartment> = {}): Apartment => (
     terminationDate: '2024-01-01',
     status: 'In Kündigung',
     responsible: 'Alice',
+    relettingOption: 'Ja Weitervermietung',
     checklist: [],
     comments: [],
     lastActivity: new Date().toISOString(),

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { getDocs, collection, query, orderBy, where, Timestamp } from 'firebase/firestore';
+import { getDocs, collection, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Bell, Activity, CheckCircle, AlertTriangle, FileText, User, Building2, ArrowLeft } from 'lucide-react';
@@ -30,8 +30,7 @@ export const NotificationsPage = () => {
         setLoading(true);
         try {
             const logsRef = collection(db, 'activity_logs');
-            // Show ALL activities regardless of who created them, as requested ("see all user tract recoast")
-            // This allows admins/users to see what others are doing.
+            // Show ALL activities regardless of who created them
             const q = query(logsRef);
 
             const querySnapshot = await getDocs(q);

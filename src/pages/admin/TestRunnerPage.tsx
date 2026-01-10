@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { runBusinessLogicTests, type TestResult } from '@/lib/tests';
 import { Layout } from '@/components/dashboard/Layout';
 import { CheckCircle, XCircle, Play, ShieldCheck, Wifi, Database } from 'lucide-react';

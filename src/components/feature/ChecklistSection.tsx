@@ -18,7 +18,6 @@ interface ChecklistSectionProps {
     onAutoStatusChange?: (newStatus: string) => void;
 }
 
-// Helper function to get user initials
 const getInitials = (name?: string | null): string => {
     if (!name) return '??';
     const parts = name.split(' ').filter(p => p.length > 0);
@@ -46,15 +45,12 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, o
         const newList = [...apartment.checklist];
         const item = newList[idx];
 
-        // Track completion
         if (updates.completed !== undefined && item.type === 'checkbox') {
             if (updates.completed) {
-                // Mark as completed - track who and when
                 updates.completedBy = user?.email || user?.displayName || 'Unknown';
                 updates.completedByInitials = getInitials(user?.displayName || user?.email);
                 updates.completedAt = new Date().toISOString();
             } else {
-                // Unchecked - clear tracking
                 updates.completedBy = undefined;
                 updates.completedByInitials = undefined;
                 updates.completedAt = undefined;
@@ -64,19 +60,17 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, o
         newList[idx] = { ...newList[idx], ...updates };
         onUpdateChecklist(newList);
 
-        // Check for popup trigger
-        if (newList[idx].text === 'Mietvertrag unterzeichnet retour' && updates.completed === true && (!apartment.newTenant || !apartment.rentalStart)) {
+        // FIX ISSUE A: Use Milestone ID instead of exact string match
+        const isContractMilestone = newList[idx].id === 'contract_signed' || newList[idx].text === 'Mietvertrag unterzeichnet retour';
+
+        if (isContractMilestone && updates.completed === true && (!apartment.newTenant || !apartment.rentalStart)) {
             onTriggerTenantPopup();
         }
 
-        // Trigger general notification
         if (updates.completed === true && NOTIFICATION_CONFIG.checklistComplete.enabled) {
             addNotification(NOTIFICATION_CONFIG.checklistComplete.message, 'success');
         }
 
-        // Rule: Automated Progression
-        // We need to check if *this specific update* caused the whole section to complete.
-        // We create a temp apartment to test the new state.
         if (onAutoStatusChange && updates.completed === true) {
             const tempApartment = { ...apartment, checklist: newList };
             const nextStatus = getAutoNextStatus(tempApartment);
