@@ -11,14 +11,16 @@ import { CommentsSection } from '@/components/feature/CommentsSection';
 import { isStatusComplete } from '@/lib/logic';
 import { logActivity } from '@/services/userService';
 import { useNotificationStore } from '@/store/useNotificationStore';
+import { cn } from '@/lib/utils';
 
 interface ApartmentDetailsModalProps {
     apartmentId: string;
     onClose: () => void;
     onNavigate?: (direction: 'next' | 'prev') => void;
+    variant?: 'horizontal' | 'vertical';
 }
 
-export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ apartmentId, onClose, onNavigate }) => {
+export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ apartmentId, onClose, onNavigate, variant = 'horizontal' }) => {
     const { apartments, updateApartment } = useApartmentStore();
     const user = useAuthStore(state => state.user);
     const apartment = apartments.find(a => a.id === apartmentId);
@@ -35,7 +37,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
         const isAdmin = user?.role === 'admin';
 
         if (newIdx > currIdx && !isStatusComplete(apartment, apartment.status) && !isAdmin) {
-            alert(`Bevor Sie zum Status "${newStatus}" wechseln können, müssen erst alle Aufgaben unter "${apartment.status}" erledigt sein.`);
+            addNotification(`Bevor Sie zum Status "${newStatus}" wechseln können, müssen erst alle Aufgaben unter "${apartment.status}" erledigt sein.`, 'error');
             return;
         }
 
@@ -47,6 +49,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
         }
 
         updateApartment(apartment.id, updates);
+        addNotification(`Status auf "${newStatus}" aktualisiert`, 'success');
 
         // Log activity
         logActivity('status_changed', {
@@ -60,13 +63,13 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
     return (
         <>
             <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
-                <div className="bg-white rounded-[3rem] w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl border-4 border-slate-100 flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="bg-white rounded-[2rem] w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl border-4 border-slate-100 flex flex-col" onClick={e => e.stopPropagation()}>
                     <DetailsHeader
                         apartment={apartment}
                         onClose={onClose}
                     />
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        <div className="p-4 md:p-10">
+                        <div className="p-4 md:p-8">
                             <StammdatenSection
                                 apartment={apartment}
                                 onUpdate={(updates) => {
@@ -83,12 +86,12 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
                             </div>
 
                             <ChecklistSection
+                                key={apartment.id}
                                 apartment={apartment}
                                 onUpdateChecklist={(list) => updateApartment(apartment.id, { checklist: list })}
                                 onTriggerTenantPopup={() => setShowTenantPopup(true)}
                                 onAutoStatusChange={(newStatus) => {
                                     handleStatusChange(newStatus as Status);
-                                    addNotification(`Status automatisch auf "${newStatus}" fortgeschritten`, 'success');
                                 }}
                             />
 
@@ -124,15 +127,33 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
                     <>
                         <button
                             onClick={(e) => { e.stopPropagation(); onNavigate('prev'); }}
-                            className="fixed left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95 group"
+                            className={cn(
+                                "fixed bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95 group z-[110]",
+                                variant === 'vertical'
+                                    ? "top-8 left-1/2 -translate-x-1/2"
+                                    : "left-4 top-1/2 -translate-y-1/2"
+                            )}
+                            title={variant === 'vertical' ? 'Oben' : 'Zurück'}
                         >
-                            <svg className="w-8 h-8 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                            {variant === 'vertical'
+                                ? <svg className="w-8 h-8 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                                : <svg className="w-8 h-8 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                            }
                         </button>
                         <button
                             onClick={(e) => { e.stopPropagation(); onNavigate('next'); }}
-                            className="fixed right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95 group"
+                            className={cn(
+                                "fixed bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110 active:scale-95 group z-[110]",
+                                variant === 'vertical'
+                                    ? "bottom-8 left-1/2 -translate-x-1/2"
+                                    : "right-4 top-1/2 -translate-y-1/2"
+                            )}
+                            title={variant === 'vertical' ? 'Unten' : 'Weiter'}
                         >
-                            <svg className="w-8 h-8 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            {variant === 'vertical'
+                                ? <svg className="w-8 h-8 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                : <svg className="w-8 h-8 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            }
                         </button>
                     </>
                 )}

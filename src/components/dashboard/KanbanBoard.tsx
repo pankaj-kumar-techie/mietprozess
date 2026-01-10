@@ -93,12 +93,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
 
                 if (canMove || isAdmin) {
                     onStatusChange(activeAp, targetStatus);
+                    addNotification(`Status auf "${targetStatus}" aktualisiert`, 'success');
                 } else {
                     addNotification(`Aufgaben für "${currentStatusName}" noch nicht vollständig!`, 'error');
                     return;
                 }
             } else {
                 onStatusChange(activeAp, targetStatus);
+                addNotification(`Status auf "${targetStatus}" aktualisiert`, 'info');
             }
         }
 
@@ -124,7 +126,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ apartments, onStatusCh
                                 ? apartments
                                     .filter(a => a.status === status)
                                     .sort((a, b) => (b.completedAt || b.createdAt || "").localeCompare(a.completedAt || a.createdAt || ""))
-                                    .slice(0, 50)
+                                    .slice(0, 60)
                                 : apartments.filter(a => a.status === status)
                         }
                         onCardClick={onCardClick}

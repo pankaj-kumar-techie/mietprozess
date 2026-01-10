@@ -12,9 +12,11 @@ import { useNotificationStore } from '@/store/useNotificationStore';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/input';
 import { ConfirmationModal } from '@/components/modals/ConfirmationModal';
+import { useTranslation } from 'react-i18next';
 
 export const AdminUsersPage = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [users, setUsers] = useState<(UserProfile & { id: string })[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -130,7 +132,7 @@ export const AdminUsersPage = () => {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-600 font-medium">Laden...</p>
+                    <p className="text-slate-600 font-medium">{t('actions.loading', 'Laden...')}</p>
                 </div>
             </div>
         );
@@ -147,8 +149,8 @@ export const AdminUsersPage = () => {
                                 <UserIcon className="w-7 h-7 text-blue-600" />
                             </div>
                             <div>
-                                <h1 className="text-3xl font-black text-slate-800">Benutzerverwaltung</h1>
-                                <p className="text-slate-500 font-medium">Benutzer und Rollen verwalten</p>
+                                <h1 className="text-3xl font-black text-slate-800">{t('admin.users_title', 'Benutzerverwaltung')}</h1>
+                                <p className="text-slate-500 font-medium">{t('admin.users_desc', 'Benutzer und Rollen verwalten')}</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
@@ -158,7 +160,7 @@ export const AdminUsersPage = () => {
                                 className="gap-2 border-2 rounded-xl h-11 px-6"
                             >
                                 <ArrowLeft className="w-4 h-4" />
-                                <span className="font-bold">Zurück</span>
+                                <span className="font-bold">{t('actions.back', 'Zurück')}</span>
                             </Button>
                         </div>
                     </div>

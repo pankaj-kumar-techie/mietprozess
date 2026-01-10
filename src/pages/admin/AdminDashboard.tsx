@@ -2,23 +2,25 @@
 import { useNavigate } from 'react-router-dom';
 import { Users, Shield, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 export const AdminDashboard = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const adminSections = [
         {
             id: 'users',
-            title: 'Benutzerverwaltung',
-            description: 'Benutzer hinzufügen, entfernen und Rollen verwalten',
+            title: t('admin.users_title', 'Benutzerverwaltung'),
+            description: t('admin.users_desc', 'Benutzer hinzufügen, entfernen und Rollen verwalten'),
             icon: Users,
             color: 'blue',
             path: '/admin/users'
         },
         {
             id: 'tests',
-            title: 'System-Diagnose',
-            description: 'Automatisierte Tests der Geschäftslogik ausführen',
+            title: t('admin.tests_title', 'System-Diagnose'),
+            description: t('admin.tests_desc', 'Automatisierte Tests der Geschäftslogik ausführen'),
             icon: CheckCircle2,
             color: 'green',
             path: '/admin/tests'
@@ -40,8 +42,8 @@ export const AdminDashboard = () => {
                 <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-4xl font-black text-slate-800 mb-2">Admin Dashboard</h1>
-                            <p className="text-slate-500 font-medium">Zentrale Verwaltung für HIT Flow</p>
+                            <h1 className="text-4xl font-black text-slate-800 mb-2">{t('admin.dashboard_title', 'Admin Dashboard')}</h1>
+                            <p className="text-slate-500 font-medium">{t('admin.dashboard_subtitle', 'Zentrale Verwaltung für HIT Flow')}</p>
                         </div>
                         <Button
                             onClick={() => navigate('/')}
@@ -49,7 +51,7 @@ export const AdminDashboard = () => {
                             className="gap-2 border-2 rounded-xl h-11 px-6"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            <span className="font-bold">Zurück zur App</span>
+                            <span className="font-bold">{t('admin.back_to_app', 'Zurück zur App')}</span>
                         </Button>
                     </div>
                 </div>

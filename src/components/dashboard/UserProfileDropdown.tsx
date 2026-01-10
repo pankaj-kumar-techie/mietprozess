@@ -117,7 +117,7 @@ export const UserProfileDropdown = () => {
 
                         {/* Change Password Shortcut */}
                         <button
-                            onClick={() => handleNavigation('/profile?section=security')}
+                            onClick={() => handleNavigation('/change-password')}
                             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-teal-50 transition-colors text-left group"
                         >
                             <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
@@ -126,20 +126,6 @@ export const UserProfileDropdown = () => {
                             <div>
                                 <p className="text-sm font-bold text-slate-800">Passwort ändern</p>
                                 <p className="text-xs text-slate-500">Sicherheit</p>
-                            </div>
-                        </button>
-
-                        {/* Settings */}
-                        <button
-                            onClick={() => handleNavigation('/help')}
-                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left group"
-                        >
-                            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-                                <HelpCircle className="w-4 h-4 text-slate-600" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-slate-800">Einstellungen</p>
-                                <p className="text-xs text-slate-500">Präferenzen anpassen</p>
                             </div>
                         </button>
                     </div>

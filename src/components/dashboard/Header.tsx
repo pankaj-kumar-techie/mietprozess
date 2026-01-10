@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, HelpCircle, Bell, Plus } from 'lucide-react';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import APP_CONFIG from '@/config/app.config';
+import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
     onNewTermination: () => void;
@@ -10,22 +12,32 @@ interface HeaderProps {
 
 export const Header = ({ onNewTermination }: HeaderProps) => {
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
+
+    const languages = [
+        { code: 'de', label: 'DE', flag: '🇩🇪' },
+        { code: 'en', label: 'EN', flag: '🇺🇸' }
+    ];
+
+    const changeLanguage = (code: string) => {
+        i18n.changeLanguage(code);
+    };
 
     return (
         <header className="bg-white/80 border-b border-slate-100 sticky top-0 z-50 backdrop-blur-xl transition-all">
-            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-[72px] flex items-center justify-between gap-4">
 
                 {/* Brand Section */}
                 <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                     <div
                         onClick={() => navigate('/')}
-                        className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-200 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+                        className="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 cursor-pointer hover:scale-105 transition-transform active:scale-95"
                     >
-                        <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                        <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div className="hidden xs:block">
-                        <h1 className="text-lg sm:text-2xl font-black text-slate-800 tracking-tighter uppercase leading-none">{APP_CONFIG.app.name}</h1>
-                        <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-widest uppercase">Management Suite</p>
+                        <h1 className="text-base sm:text-xl font-black text-slate-800 tracking-tighter uppercase leading-none">{APP_CONFIG.app.name}</h1>
+                        <p className="text-[9px] sm:text-[10px] font-black text-slate-400 tracking-widest uppercase mt-0.5">Management Suite</p>
                     </div>
                 </div>
 
@@ -35,11 +47,11 @@ export const Header = ({ onNewTermination }: HeaderProps) => {
                     {/* Primary Action Button */}
                     <button
                         onClick={onNewTermination}
-                        className="group relative flex items-center gap-2 bg-slate-900 text-white px-4 sm:px-6 h-10 sm:h-12 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95 shrink-0"
+                        className="group relative flex items-center gap-2 bg-slate-900 text-white px-3.5 sm:px-5 h-9 sm:h-11 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95 shrink-0"
                     >
-                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform" />
+                        <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:rotate-90 transition-transform" />
                         <span className="hidden md:inline">{APP_CONFIG.ui.text.header.newTermination}</span>
-                        <span className="md:hidden">Neu</span>
+                        <span className="md:hidden">{t('dashboard.new_short', 'Neu')}</span>
                     </button>
 
                     <div className="flex items-center gap-1 sm:gap-2">
@@ -47,21 +59,42 @@ export const Header = ({ onNewTermination }: HeaderProps) => {
                         <div className="hidden sm:flex items-center gap-1">
                             <button
                                 onClick={() => navigate('/notifications')}
-                                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all relative"
+                                className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all relative"
                             >
-                                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                                <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                                <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
                             </button>
                             <button
                                 onClick={() => navigate('/help')}
-                                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-2xl transition-all"
+                                className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all"
                             >
-                                <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <HelpCircle className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                             </button>
                         </div>
 
                         {/* Divider */}
-                        <div className="h-8 w-px bg-slate-100 mx-1 hidden sm:block"></div>
+                        <div className="h-6 w-px bg-slate-100 mx-1 hidden sm:block"></div>
+
+                        {/* Language Switcher */}
+                        {/* <div className="flex bg-slate-100 p-1 rounded-lg gap-1 border border-slate-200">
+                            {languages.map((lang) => (
+                                <button
+                                    key={lang.code}
+                                    onClick={() => changeLanguage(lang.code)}
+                                    className={cn(
+                                        "px-2 py-1 rounded-md text-[10px] font-black transition-all",
+                                        i18n.language.startsWith(lang.code)
+                                            ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200"
+                                            : "text-slate-400 hover:text-slate-600"
+                                    )}
+                                >
+                                    {lang.label}
+                                </button>
+                            ))}
+                        </div> */}
+
+                        {/* Divider */}
+                        {/* <div className="h-6 w-px bg-slate-100 mx-1 hidden sm:block"></div> */}
 
                         {/* Profile Dropdown */}
                         <UserProfileDropdown />

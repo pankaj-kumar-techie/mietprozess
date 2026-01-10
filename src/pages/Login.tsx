@@ -5,8 +5,10 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Building2, ArrowRight } from 'lucide-react';
 import { loginWithFirebase } from '@/lib/auth-logic';
 import APP_CONFIG from '@/config/app.config';
+import { useTranslation } from 'react-i18next';
 
 export const Login = () => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -29,12 +31,12 @@ export const Login = () => {
             return APP_CONFIG.ui.text.errors.network.firebase;
         }
         if (msg.includes('user-not-found') || msg.includes('wrong-password') || msg.includes('invalid-credential')) {
-            return "E-Mail oder Passwort falsch. Bitte versuchen Sie es erneut.";
+            return t('login.error_credentials', 'E-Mail oder Passwort falsch. Bitte versuchen Sie es erneut.');
         }
         if (msg.includes('too-many-requests')) {
-            return "Zu viele Versuche. Bitte warten Sie einen Moment.";
+            return t('login.error_too_many_requests', 'Zu viele Versuche. Bitte warten Sie einen Moment.');
         }
-        return "Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Eingaben.";
+        return t('login.error_generic', 'Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Eingaben.');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -62,7 +64,7 @@ export const Login = () => {
                 <div className="bg-white rounded-[2rem] shadow-2xl p-8 md:p-10 border-4 border-slate-50">
                     {/* Logo & Title */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-600 to-emerald-600 rounded-3xl mb-6 shadow-lg shadow-green-200 transform hover:rotate-3 transition-transform duration-300">
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl mb-6 shadow-lg shadow-green-200 transform hover:rotate-3 transition-transform duration-300">
                             <Building2 className="w-10 h-10 text-white" />
                         </div>
                         <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">
@@ -115,7 +117,7 @@ export const Login = () => {
                             disabled={loading}
                             className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-widest mt-4"
                         >
-                            {loading ? 'Anmelden...' : APP_CONFIG.ui.text.login.loginButton}
+                            {loading ? t('login.loading', 'Anmelden...') : APP_CONFIG.ui.text.login.loginButton}
                             {!loading && <ArrowRight className="w-5 h-5" />}
                         </button>
                     </form>

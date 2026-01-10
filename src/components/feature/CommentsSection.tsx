@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { MessageSquare } from 'lucide-react';
 import type { Apartment } from '@/types';
+import { useNotificationStore } from '@/store/useNotificationStore';
 
 interface CommentsSectionProps {
     apartment: Apartment;
@@ -10,6 +11,7 @@ interface CommentsSectionProps {
 
 export const CommentsSection: React.FC<CommentsSectionProps> = ({ apartment, onAddComment }) => {
     const [newCommentText, setNewCommentText] = useState('');
+    const addNotification = useNotificationStore(state => state.addNotification);
 
     const sortedComments = useMemo(() => {
         return apartment.comments ? [...apartment.comments].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) : [];
@@ -19,6 +21,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ apartment, onA
         if (newCommentText.trim()) {
             onAddComment(newCommentText);
             setNewCommentText('');
+            addNotification('Kommentar hinzugefügt', 'success');
         }
     };
 

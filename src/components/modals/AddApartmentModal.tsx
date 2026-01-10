@@ -5,9 +5,9 @@ import type { Apartment, ChecklistItem, Responsible, RelettingOption } from '@/t
 import { STATUS_OPTIONS, RELETTING_OPTIONS } from '@/types';
 import { getTeamMembers, type TeamMember } from '@/services/teamService';
 import { logActivity } from '@/services/userService';
+import { useNotificationStore } from '@/store/useNotificationStore';
 
 // Basic checklist schema to initialize
-// Added 'contract_signed' ID to fix Issue A
 const DEFAULT_CHECKLIST_SCHEMA: ChecklistItem[] = [
     { type: 'header', text: 'In Kündigung' },
     { type: 'checkbox', text: 'Eigentümer informiert' },
@@ -64,6 +64,8 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
     const user = useAuthStore(state => state.user);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [loadingTeam, setLoadingTeam] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const addNotification = useNotificationStore(state => state.addNotification);
 
     const [formData, setFormData] = useState<Partial<Apartment>>({
         address: '',
@@ -75,13 +77,11 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
         relettingOption: RELETTING_OPTIONS[0] as RelettingOption,
     });
 
-    // Load team members from Firestore
     useEffect(() => {
         const loadTeam = async () => {
             try {
                 const members = await getTeamMembers();
                 setTeamMembers(members);
-                // Set current user as default responsible
                 if (user && members.length > 0) {
                     const currentUserMember = members.find(m => m.email === user.email);
                     if (currentUserMember) {
@@ -99,68 +99,59 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
         loadTeam();
     }, [user]);
 
-    // Error state for validation
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Validate form
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
-
-        if (!formData.address?.trim()) {
-            newErrors.address = 'Adresse ist erforderlich';
-        }
-        if (!formData.objectName?.trim()) {
-            newErrors.objectName = 'Objekt ist erforderlich';
-        }
-        if (!formData.oldTenant?.trim()) {
-            newErrors.oldTenant = 'Alter Mieter ist erforderlich';
-        }
-        if (!formData.terminationDate) {
-            newErrors.terminationDate = 'Kündigungsdatum ist erforderlich';
-        }
-        if (!formData.responsible) {
-            newErrors.responsible = 'Zuständigkeit ist erforderlich';
-        }
-
+        if (!formData.address?.trim()) newErrors.address = 'Adresse ist erforderlich';
+        if (!formData.objectName?.trim()) newErrors.objectName = 'Objekt ist erforderlich';
+        if (!formData.oldTenant?.trim()) newErrors.oldTenant = 'Alter Mieter ist erforderlich';
+        if (!formData.terminationDate) newErrors.terminationDate = 'Kündigungsdatum ist erforderlich';
+        if (!formData.responsible) newErrors.responsible = 'Zuständigkeit ist erforderlich';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async () => {
-        // Validate form
-        if (!validateForm()) {
-            return;
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
+        try {
+            const newApartment: Apartment = {
+                ...formData as any,
+                comments: [],
+                checklist: initializeChecklist(),
+                lastActivity: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                createdBy: user?.email || 'system'
+            };
+
+            await addApartment(newApartment);
+
+            await logActivity('apartment_created', {
+                address: formData.address,
+                responsible: formData.responsible,
+                createdBy: user?.displayName || user?.email
+            });
+
+            addNotification('Datensatz erfolgreich erstellt!', 'success');
+            onClose();
+        } catch (error) {
+            console.error('Submit failed:', error);
+            addNotification('Fehler beim Erstellen des Datensatzes', 'error');
+        } finally {
+            setIsSubmitting(false);
         }
-
-        const newApartment: Apartment = {
-            ...formData as any,
-            comments: [],
-            checklist: initializeChecklist(),
-            lastActivity: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-            createdBy: user?.email || 'system'
-        };
-
-        await addApartment(newApartment);
-
-        // Log activity
-        await logActivity('apartment_created', {
-            address: formData.address,
-            responsible: formData.responsible,
-            createdBy: user?.displayName || user?.email
-        });
-
-        onClose();
     };
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[130] p-4 backdrop-blur-md">
-            <div className="bg-white rounded-[2.5rem] shadow-2xl p-10 w-full max-w-xl animate-in zoom-in duration-300 border-4 border-slate-50" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[130] p-4 backdrop-blur-md" onClick={onClose}>
+            <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-xl animate-in zoom-in duration-300 border-4 border-slate-50" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg text-lg font-bold">
+                        +
                     </div>
-                    <h3 className="text-3xl font-black text-slate-800 uppercase tracking-tighter">Neue Kündigung</h3>
+                    <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Neue Kündigung</h3>
                 </div>
 
                 <div className="space-y-6">
@@ -248,11 +239,16 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
                 </div>
 
                 <div className="flex gap-4 mt-12">
-                    <button onClick={onClose} className="flex-1 py-5 font-black text-slate-500 bg-slate-100 rounded-3xl transition hover:bg-slate-200 uppercase tracking-widest">
+                    <button disabled={isSubmitting} onClick={onClose} className="flex-1 py-5 font-black text-slate-500 bg-slate-100 rounded-3xl transition hover:bg-slate-200 uppercase tracking-widest disabled:opacity-50">
                         Abbrechen
                     </button>
-                    <button onClick={handleSubmit} className="flex-1 py-5 font-black text-white bg-blue-600 rounded-3xl shadow-2xl shadow-blue-200 transition active:scale-95 uppercase tracking-widest">
-                        Erfassen
+                    <button disabled={isSubmitting} onClick={handleSubmit} className="flex-1 py-5 font-black text-white bg-blue-600 rounded-3xl shadow-2xl shadow-blue-200 transition active:scale-95 uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2">
+                        {isSubmitting ? (
+                            <>
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                Erfasse...
+                            </>
+                        ) : 'Erfassen'}
                     </button>
                 </div>
             </div>

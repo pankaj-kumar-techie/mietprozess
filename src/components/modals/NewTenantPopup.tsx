@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 
 interface NewTenantPopupProps {
@@ -22,41 +23,49 @@ export const NewTenantPopup: React.FC<NewTenantPopupProps> = ({ show, onSave, in
     if (!show) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] p-4 backdrop-blur-md" onClick={onCancel}>
-            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md border-4 border-blue-600 animate-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
-                <h3 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">Neuvermietung</h3>
-                <p className="text-slate-500 text-sm mb-8 font-medium italic">Bitte Name und Mietbeginn zwingend erfassen.</p>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4 backdrop-blur-sm" onClick={onCancel}>
+            <div className="bg-white rounded-[2rem] shadow-2xl p-7 w-full max-w-sm border-4 border-blue-600 animate-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
+                <h3 className="text-xl font-black text-slate-800 mb-1 uppercase tracking-tight">Neuvermietung</h3>
+                <p className="text-slate-400 text-[11px] mb-6 font-bold uppercase tracking-wide">Name und Mietbeginn sind erforderlich.</p>
 
-                <div className="space-y-4 mb-10">
-                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Name des neuen Mieters</label>
+                <div className="space-y-3 mb-8">
+                    <div className="bg-slate-50 p-3 rounded-xl border-2 border-slate-100 focus-within:border-blue-200 transition-all">
+                        <label className="text-[9px] font-black text-slate-400 uppercase mb-0.5 block tracking-widest leading-none">Name des Mieters</label>
                         <input
                             type="text"
                             autoFocus
                             value={name}
                             onChange={e => setName(e.target.value)}
                             placeholder="Vorname Nachname"
-                            className="w-full bg-transparent font-black text-gray-800 text-lg outline-none"
+                            className="w-full bg-transparent font-black text-slate-800 text-sm outline-none placeholder:text-slate-200"
                         />
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Mietbeginn</label>
+                    <div className="bg-slate-50 p-3 rounded-xl border-2 border-slate-100 focus-within:border-blue-200 transition-all">
+                        <label className="text-[9px] font-black text-slate-400 uppercase mb-0.5 block tracking-widest leading-none">Mietbeginn</label>
                         <input
                             type="date"
                             value={date}
                             onChange={e => setDate(e.target.value)}
-                            className="w-full bg-transparent font-black text-gray-800 text-lg outline-none"
+                            className="w-full bg-transparent font-black text-slate-800 text-sm outline-none cursor-pointer"
                         />
                     </div>
                 </div>
 
-                <button
-                    onClick={() => name.trim() && date && onSave(name, date)}
-                    disabled={!name.trim() || !date}
-                    className="w-full py-5 rounded-2xl font-black text-white bg-blue-600 shadow-xl disabled:bg-slate-300 transition active:scale-95 uppercase tracking-widest"
-                >
-                    Speichern & Fortfahren
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={onCancel}
+                        className="flex-1 py-3.5 rounded-xl font-black text-slate-400 bg-slate-100 hover:bg-slate-200 transition active:scale-95 uppercase tracking-widest text-[11px]"
+                    >
+                        Abbrechen
+                    </button>
+                    <button
+                        onClick={() => name.trim() && date && onSave(name, date)}
+                        disabled={!name.trim() || !date}
+                        className="flex-[2] py-3.5 rounded-xl font-black text-white bg-blue-600 shadow-lg shadow-blue-100 disabled:bg-slate-200 disabled:shadow-none transition active:scale-95 uppercase tracking-widest text-[11px]"
+                    >
+                        Speichern
+                    </button>
+                </div>
             </div>
         </div>
     );

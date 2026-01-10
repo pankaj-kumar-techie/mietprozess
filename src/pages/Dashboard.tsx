@@ -9,8 +9,10 @@ import { AddApartmentModal } from '@/components/modals/AddApartmentModal';
 import { ApartmentDetailsModal } from '@/components/modals/ApartmentDetailsModal';
 import { ConfirmationModal } from '@/components/modals/ConfirmationModal';
 import { shouldArchive } from '@/lib/logic';
+import { useTranslation } from 'react-i18next';
 
 export const Dashboard: React.FC = () => {
+    const { t } = useTranslation();
     const {
         apartments,
         subscribeToApartments,
@@ -101,15 +103,24 @@ export const Dashboard: React.FC = () => {
                     apartmentId={selectedApartmentId}
                     onClose={() => setSelectedApartmentId(null)}
                     onNavigate={(direction) => {
-                        const currentIndex = filteredApartments.findIndex(a => a.id === selectedApartmentId);
+                        const current = filteredApartments.find(a => a.id === selectedApartmentId);
+                        if (!current) return;
+
+                        // Navigate within the same column in Kanban, or global list in List view
+                        const pool = currentView === 'kanban'
+                            ? filteredApartments.filter(a => a.status === current.status)
+                            : filteredApartments;
+
+                        const currentIndex = pool.findIndex(a => a.id === selectedApartmentId);
                         if (currentIndex === -1) return;
 
                         let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-                        if (nextIndex >= filteredApartments.length) nextIndex = 0;
-                        if (nextIndex < 0) nextIndex = filteredApartments.length - 1;
+                        if (nextIndex >= pool.length) nextIndex = 0;
+                        if (nextIndex < 0) nextIndex = pool.length - 1;
 
-                        setSelectedApartmentId(filteredApartments[nextIndex].id);
+                        setSelectedApartmentId(pool[nextIndex].id);
                     }}
+                    variant={currentView === 'kanban' ? 'vertical' : 'horizontal'}
                 />
             )}
 
@@ -122,9 +133,9 @@ export const Dashboard: React.FC = () => {
                         setDeleteConfirmationId(null);
                     }
                 }}
-                title="Datensatz löschen?"
-                description="Möchten Sie diesen Datensatz wirklich unwiderruflich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
-                confirmText="Ja, löschen"
+                title={t('actions.delete_confirm_title', 'Datensatz löschen?')}
+                description={t('actions.delete_confirm_desc', 'Möchten Sie diesen Datensatz wirklich unwiderruflich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')}
+                confirmText={t('actions.delete', 'Löschen')}
                 variant="danger"
             />
         </Layout>
