@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { STATUS_COLORS } from '@/types';
 import type { ChecklistItem, ChecklistItemType, Apartment, Status } from '@/types';
-import { isStatusComplete } from '@/lib/logic';
+import { isStatusComplete, getAutoNextStatus } from '@/lib/logic';
 import { cn } from '@/lib/utils';
 import { ClipboardList, Trash, ChevronDown } from 'lucide-react';
 import { useNotificationStore } from '@/store/useNotificationStore';
@@ -14,6 +15,7 @@ interface ChecklistSectionProps {
     apartment: Apartment;
     onUpdateChecklist: (updatedList: ChecklistItem[]) => void;
     onTriggerTenantPopup: () => void;
+    onAutoStatusChange?: (newStatus: string) => void;
 }
 
 // Helper function to get user initials
@@ -25,7 +27,7 @@ const getInitials = (name?: string | null): string => {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, onUpdateChecklist, onTriggerTenantPopup }) => {
+export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, onUpdateChecklist, onTriggerTenantPopup, onAutoStatusChange }) => {
     const [manualCollapse, setManualCollapse] = useState<Record<string, boolean>>({});
     const [newChecklistItemText, setNewChecklistItemText] = useState('');
     const addNotification = useNotificationStore(state => state.addNotification);
@@ -70,6 +72,17 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, o
         // Trigger general notification
         if (updates.completed === true && NOTIFICATION_CONFIG.checklistComplete.enabled) {
             addNotification(NOTIFICATION_CONFIG.checklistComplete.message, 'success');
+        }
+
+        // Rule: Automated Progression
+        // We need to check if *this specific update* caused the whole section to complete.
+        // We create a temp apartment to test the new state.
+        if (onAutoStatusChange && updates.completed === true) {
+            const tempApartment = { ...apartment, checklist: newList };
+            const nextStatus = getAutoNextStatus(tempApartment);
+            if (nextStatus) {
+                onAutoStatusChange(nextStatus);
+            }
         }
     };
 

@@ -11,6 +11,7 @@ import { Trash2, UserPlus, Shield, User as UserIcon, ArrowLeft, AlertTriangle, E
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/input';
+import { ConfirmationModal } from '@/components/modals/ConfirmationModal';
 
 export const AdminUsersPage = () => {
     const navigate = useNavigate();
@@ -30,6 +31,7 @@ export const AdminUsersPage = () => {
     const [editDisplayName, setEditDisplayName] = useState('');
     const [editRole, setEditRole] = useState<'admin' | 'user'>('user');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<{ id: string; email: string } | null>(null);
 
     const addNotification = useNotificationStore(state => state.addNotification);
 
@@ -86,7 +88,7 @@ export const AdminUsersPage = () => {
 
     const handleDeleteUser = async (userId: string, email: string) => {
         if (!db) return;
-        if (!confirm(`Möchten Sie ${email} wirklich entfernen?\n\nHinweis: Dies entfernt nur die Autorisierung. Der Firebase Auth Account bleibt bestehen.`)) return;
+        // Native confirm removed in favor of Modal
 
         try {
             await deleteDoc(doc(db, 'authorized_users', userId));
@@ -295,7 +297,7 @@ export const AdminUsersPage = () => {
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
                                         <Button
-                                            onClick={() => handleDeleteUser(user.id, user.email || '')}
+                                            onClick={() => setUserToDelete({ id: user.id, email: user.email || '' })}
                                             variant="outline"
                                             size="sm"
                                             className="rounded-lg text-red-600 hover:bg-red-50 border-2 border-red-200 hover:border-red-300"
@@ -378,6 +380,21 @@ export const AdminUsersPage = () => {
                         </div>
                     </div>
                 </Modal>
+
+                <ConfirmationModal
+                    isOpen={!!userToDelete}
+                    onClose={() => setUserToDelete(null)}
+                    onConfirm={() => {
+                        if (userToDelete) {
+                            handleDeleteUser(userToDelete.id, userToDelete.email);
+                            setUserToDelete(null);
+                        }
+                    }}
+                    title="Benutzer entfernen?"
+                    description={`Möchten Sie ${userToDelete?.email} wirklich entfernen? Dies entfernt nur die Autorisierung. Der Firebase Account bleibt bestehen.`}
+                    confirmText="Entfernen"
+                    variant="danger"
+                />
             </div>
         </div>
     );

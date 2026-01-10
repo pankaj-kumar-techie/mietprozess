@@ -10,6 +10,7 @@ import { ChecklistSection } from '@/components/feature/ChecklistSection';
 import { CommentsSection } from '@/components/feature/CommentsSection';
 import { isStatusComplete } from '@/lib/logic';
 import { logActivity } from '@/services/userService';
+import { useNotificationStore } from '@/store/useNotificationStore';
 
 interface ApartmentDetailsModalProps {
     apartmentId: string;
@@ -23,6 +24,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
     const apartment = apartments.find(a => a.id === apartmentId);
     const [showTenantPopup, setShowTenantPopup] = useState(false);
     const commentsRef = useRef<HTMLElement>(null);
+    const addNotification = useNotificationStore(state => state.addNotification);
 
     if (!apartment) return null;
 
@@ -82,6 +84,10 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
                                 apartment={apartment}
                                 onUpdateChecklist={(list) => updateApartment(apartment.id, { checklist: list })}
                                 onTriggerTenantPopup={() => setShowTenantPopup(true)}
+                                onAutoStatusChange={(newStatus) => {
+                                    handleStatusChange(newStatus as Status);
+                                    addNotification(`Status automatisch auf "${newStatus}" fortgeschritten`, 'success');
+                                }}
                             />
 
                             <div ref={commentsRef as any}>

@@ -7,6 +7,8 @@ import { KanbanBoard } from '@/components/dashboard/KanbanBoard';
 import { ApartmentList } from '@/components/dashboard/ApartmentList';
 import { AddApartmentModal } from '@/components/modals/AddApartmentModal';
 import { ApartmentDetailsModal } from '@/components/modals/ApartmentDetailsModal';
+import { ConfirmationModal } from '@/components/modals/ConfirmationModal';
+import { shouldArchive } from '@/lib/logic';
 
 export const Dashboard: React.FC = () => {
     const {
@@ -22,6 +24,7 @@ export const Dashboard: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(null);
     const [showArchived, setShowArchived] = useState(false);
+    const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
 
     // Real-time subscription
     useEffect(() => {
@@ -33,13 +36,9 @@ export const Dashboard: React.FC = () => {
     const filteredApartments = apartments.filter(a => {
         // Archive filtering
         if (!showArchived) {
-            if (a.completedAt) {
-                const completedDate = new Date(a.completedAt);
-                const now = new Date();
-                const daysSinceCompleted = Math.floor((now.getTime() - completedDate.getTime()) / (1000 * 60 * 60 * 24));
-                if (daysSinceCompleted >= 30) {
-                    return false; // Hide archived apartments
-                }
+            // Use centralized logic (handles legacy data with missing completedAt)
+            if (shouldArchive(a)) {
+                return false; // Hide archived apartments
             }
         }
 
@@ -72,13 +71,13 @@ export const Dashboard: React.FC = () => {
                     apartments={filteredApartments}
                     onStatusChange={(ap, newStatus) => {
                         const updates: any = { status: newStatus };
-                        if (newStatus === 'abgeschlossen' && !ap.completedAt) {
+                        if (newStatus === 'Abgeschlossen' && !ap.completedAt) {
                             updates.completedAt = new Date().toISOString();
                         }
                         updateApartment(ap.id, updates);
                     }}
                     onCardClick={(id) => setSelectedApartmentId(id)}
-                    onCardDelete={(id) => deleteApartment(id)}
+                    onCardDelete={(id) => setDeleteConfirmationId(id)}
                 />
             ) : (
                 <ApartmentList
@@ -105,6 +104,21 @@ export const Dashboard: React.FC = () => {
                     }}
                 />
             )}
+
+            <ConfirmationModal
+                isOpen={!!deleteConfirmationId}
+                onClose={() => setDeleteConfirmationId(null)}
+                onConfirm={() => {
+                    if (deleteConfirmationId) {
+                        deleteApartment(deleteConfirmationId);
+                        setDeleteConfirmationId(null);
+                    }
+                }}
+                title="Datensatz löschen?"
+                description="Möchten Sie diesen Datensatz wirklich unwiderruflich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+                confirmText="Ja, löschen"
+                variant="danger"
+            />
         </Layout>
     );
 };
