@@ -1,3 +1,4 @@
+
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -14,11 +15,12 @@ export interface TeamMember {
  */
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
     if (!db) {
-        // Fallback for development without Firebase
+        // Fallback for development without Firebase - Using realistic Swiss names
         return [
-            { id: '1', email: 'sarah@example.com', displayName: 'Sarah', role: 'user' },
-            { id: '2', email: 'max@example.com', displayName: 'Max', role: 'user' },
-            { id: '3', email: 'anna@example.com', displayName: 'Anna', role: 'admin' }
+            { id: '1', email: 'service@heinzer-immobilien.ch', displayName: 'Kundendienst', role: 'admin' },
+            { id: '2', email: 'markus@heinzer-immobilien.ch', displayName: 'Markus Heinzer', role: 'admin' },
+            { id: '3', email: 'sabine@heinzer-immobilien.ch', displayName: 'Sabine Muster', role: 'user' },
+            { id: '4', email: 'peter@heinzer-immobilien.ch', displayName: 'Peter Müller', role: 'user' }
         ];
     }
 

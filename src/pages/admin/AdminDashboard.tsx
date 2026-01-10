@@ -58,7 +58,7 @@ export const AdminDashboard = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-4xl font-black text-slate-800 mb-2">Admin Dashboard</h1>
-                            <p className="text-slate-500 font-medium">Zentrale Verwaltung für MietProzess</p>
+                            <p className="text-slate-500 font-medium">Zentrale Verwaltung für HIT Flow</p>
                         </div>
                         <Button
                             onClick={() => navigate('/')}

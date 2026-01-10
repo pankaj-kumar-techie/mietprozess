@@ -1,23 +1,36 @@
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { UserProfile } from '@/lib/auth-logic';
+import { db, auth } from '@/lib/firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import type { UserProfile } from '@/store/useAuthStore';
 import { createUserAccount } from '@/services/userService';
 import { Button } from '@/components/ui/button';
-import { Trash2, UserPlus, Shield, User as UserIcon, ArrowLeft, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Trash2, UserPlus, Shield, User as UserIcon, ArrowLeft, AlertTriangle, Eye, EyeOff, Edit2 } from 'lucide-react';
 import { useNotificationStore } from '@/store/useNotificationStore';
+import { Modal } from '@/components/ui/Modal';
+import { Input } from '@/components/ui/input';
 
 export const AdminUsersPage = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState<(UserProfile & { id: string })[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Create State
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [newDisplayName, setNewDisplayName] = useState('');
     const [newRole, setNewRole] = useState<'admin' | 'user'>('user');
     const [creating, setCreating] = useState(false);
+
+    // Edit State
+    const [editingUser, setEditingUser] = useState<(UserProfile & { id: string }) | null>(null);
+    const [editDisplayName, setEditDisplayName] = useState('');
+    const [editRole, setEditRole] = useState<'admin' | 'user'>('user');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
     const addNotification = useNotificationStore(state => state.addNotification);
 
     const loadUsers = async () => {
@@ -50,7 +63,6 @@ export const AdminUsersPage = () => {
 
         setCreating(true);
         try {
-            // Create user in both Firebase Auth and Firestore
             await createUserAccount({
                 email: newEmail,
                 password: newPassword,
@@ -77,30 +89,37 @@ export const AdminUsersPage = () => {
         if (!confirm(`Möchten Sie ${email} wirklich entfernen?\n\nHinweis: Dies entfernt nur die Autorisierung. Der Firebase Auth Account bleibt bestehen.`)) return;
 
         try {
-            // Delete from Firestore authorized_users
             await deleteDoc(doc(db, 'authorized_users', userId));
             addNotification(`Benutzer ${email} aus Whitelist entfernt`, 'success');
             loadUsers();
-
-            // Note: Deleting from Firebase Auth requires admin SDK on backend
-            // For now, we only remove from authorized_users
         } catch (error) {
             console.error('Failed to delete user:', error);
             addNotification('Fehler beim Löschen des Benutzers', 'error');
         }
     };
 
-    const handleToggleRole = async (userId: string, currentRole: 'admin' | 'user') => {
-        if (!db) return;
-        const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    const openEditModal = (user: UserProfile & { id: string }) => {
+        setEditingUser(user);
+        setEditDisplayName(user.displayName || user.name || '');
+        setEditRole(user.role || 'user');
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdateUser = async () => {
+        if (!db || !editingUser) return;
 
         try {
-            await updateDoc(doc(db, 'authorized_users', userId), { role: newRole });
-            addNotification(`Rolle aktualisiert zu ${newRole}`, 'success');
+            await updateDoc(doc(db, 'authorized_users', editingUser.id), {
+                displayName: editDisplayName,
+                role: editRole
+            });
+
+            addNotification('Benutzerdaten aktualisiert', 'success');
+            setIsEditModalOpen(false);
             loadUsers();
         } catch (error) {
-            console.error('Failed to update role:', error);
-            addNotification('Fehler beim Aktualisieren der Rolle', 'error');
+            console.error('Failed to update user:', error);
+            addNotification('Fehler beim Aktualisieren', 'error');
         }
     };
 
@@ -147,7 +166,7 @@ export const AdminUsersPage = () => {
                         <AlertTriangle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                         <div className="text-sm text-blue-800">
                             <p className="font-bold mb-1">Wichtiger Hinweis:</p>
-                            <p>Das Löschen eines Benutzers entfernt nur die Autorisierung aus der Whitelist. Der Firebase Authentication Account bleibt bestehen und muss separat in der Firebase Console gelöscht werden.</p>
+                            <p>Das Löschen eines Benutzers entfernt nur die Autorisierung aus der Whitelist. Der Firebase Authentication Account bleibt bestehen.</p>
                         </div>
                     </div>
                 </div>
@@ -158,9 +177,7 @@ export const AdminUsersPage = () => {
                     <form onSubmit={handleAddUser} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">
-                                    Email-Adresse *
-                                </label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Email-Adresse *</label>
                                 <input
                                     type="email"
                                     value={newEmail}
@@ -172,9 +189,7 @@ export const AdminUsersPage = () => {
                                 />
                             </div>
                             <div>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">
-                                    Passwort *
-                                </label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Passwort *</label>
                                 <div className="relative">
                                     <input
                                         type={showPassword ? "text" : "password"}
@@ -198,9 +213,7 @@ export const AdminUsersPage = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">
-                                    Vollständiger Name (optional)
-                                </label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Vollständiger Name (optional)</label>
                                 <input
                                     type="text"
                                     value={newDisplayName}
@@ -211,9 +224,7 @@ export const AdminUsersPage = () => {
                                 />
                             </div>
                             <div>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">
-                                    Rolle
-                                </label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Rolle</label>
                                 <select
                                     value={newRole}
                                     onChange={(e) => setNewRole(e.target.value as 'admin' | 'user')}
@@ -225,11 +236,7 @@ export const AdminUsersPage = () => {
                                 </select>
                             </div>
                         </div>
-                        <Button
-                            type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-700 rounded-xl h-12 gap-2 font-bold"
-                            disabled={creating}
-                        >
+                        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 rounded-xl h-12 gap-2 font-bold" disabled={creating}>
                             <UserPlus className="w-5 h-5" />
                             {creating ? 'Wird erstellt...' : 'Benutzer hinzufügen'}
                         </Button>
@@ -239,9 +246,7 @@ export const AdminUsersPage = () => {
                 {/* User List */}
                 <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-black text-slate-800">
-                            Autorisierte Benutzer ({users.length})
-                        </h2>
+                        <h2 className="text-xl font-black text-slate-800">Autorisierte Benutzer ({users.length})</h2>
                     </div>
                     <div className="space-y-3">
                         {users.length === 0 ? (
@@ -251,38 +256,35 @@ export const AdminUsersPage = () => {
                             </div>
                         ) : (
                             users.map((user) => (
-                                <div
-                                    key={user.id}
-                                    className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
-                                >
+                                <div key={user.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all border border-slate-200">
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${user.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                                            }`}>
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${user.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
                                             {user.role === 'admin' ? <Shield className="w-6 h-6" /> : <UserIcon className="w-6 h-6" />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-800">{user.displayName || user.email.split('@')[0]}</p>
-                                            <p className="text-sm text-slate-500">{user.email}</p>
-                                            <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                                                }`}>
+                                            <p className="font-bold text-slate-800">{user.displayName || user.name || (user.email ? user.email.split('@')[0] : 'Unbekannt')}</p>
+                                            <p className="text-sm text-slate-500">{user.email || 'Keine Email'}</p>
+                                            <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                                                 {user.role === 'admin' ? 'Administrator' : 'Benutzer'}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
                                         <Button
-                                            onClick={() => handleToggleRole(user.id, user.role)}
+                                            onClick={() => openEditModal(user)}
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-lg border-2 font-bold"
+                                            className="rounded-lg border-2 font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100"
+                                            title="Bearbeiten"
                                         >
-                                            {user.role === 'admin' ? 'Als User' : 'Als Admin'}
+                                            <Edit2 className="w-4 h-4" />
                                         </Button>
                                         <Button
-                                            onClick={() => handleDeleteUser(user.id, user.email)}
+                                            onClick={() => handleDeleteUser(user.id, user.email || '')}
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-lg text-red-600 hover:bg-red-50 border-2 border-red-200"
+                                            className="rounded-lg text-red-600 hover:bg-red-50 border-2 border-red-200 hover:border-red-300"
+                                            title="Löschen"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
@@ -292,6 +294,75 @@ export const AdminUsersPage = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Edit Modal */}
+                <Modal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    title="Benutzer bearbeiten"
+                >
+                    <div className="space-y-4 font-sans">
+                        <div>
+                            <label className="text-xs font-black uppercase text-slate-400 block mb-2">E-Mail (Nicht änderbar)</label>
+                            <Input value={editingUser?.email || ''} disabled className="bg-slate-100 text-slate-500" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-black uppercase text-slate-400 block mb-2">Anzeigename</label>
+                            <Input
+                                value={editDisplayName}
+                                onChange={(e) => setEditDisplayName(e.target.value)}
+                                placeholder="Name eingeben"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-black uppercase text-slate-400 block mb-2">Rolle</label>
+                            <select
+                                value={editRole}
+                                onChange={(e) => setEditRole(e.target.value as 'admin' | 'user')}
+                                className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 focus:border-green-500 outline-none transition-all"
+                            >
+                                <option value="user">Benutzer</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                        </div>
+
+                        {/* Password Reset Section */}
+                        <div className="pt-4 border-t border-slate-100">
+                            <label className="text-xs font-black uppercase text-slate-400 block mb-3">Sicherheit (Passwort)</label>
+                            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                                <div className="flex items-start gap-3 mb-3">
+                                    <Shield className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                                    <p className="text-xs text-orange-800 leading-relaxed">
+                                        Aus Sicherheitsgründen können Passwörter hier nicht direkt geändert werden.
+                                        Senden Sie dem Benutzer eine E-Mail zur Passwort-Zurücksetzung.
+                                    </p>
+                                </div>
+                                <Button
+                                    onClick={async () => {
+                                        if (editingUser?.email) {
+                                            try {
+                                                await sendPasswordResetEmail(auth, editingUser.email);
+                                                addNotification(`Reset-E-Mail an ${editingUser.email} gesendet`, 'success');
+                                            } catch (e: any) {
+                                                console.error(e);
+                                                addNotification('Fehler beim Senden der E-Mail', 'error');
+                                            }
+                                        }
+                                    }}
+                                    variant="outline"
+                                    className="w-full bg-white border-orange-200 text-orange-700 hover:bg-orange-100 hover:text-orange-800 font-bold"
+                                >
+                                    Passwort-Reset E-Mail senden
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 flex gap-3">
+                            <Button onClick={() => setIsEditModalOpen(false)} variant="outline" className="flex-1">Abbrechen</Button>
+                            <Button onClick={handleUpdateUser} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold">Speichern</Button>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </div>
     );

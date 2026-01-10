@@ -1,3 +1,4 @@
+
 import {
     collection,
     getDocs,
@@ -11,8 +12,44 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Apartment } from "@/types";
+import { getAuth } from 'firebase/auth';
 
 const COLLECTION_NAME = 'apartments';
+const ACTIVITY_LOGS_COLLECTION = 'activity_logs';
+
+// Helper to log activities
+const logActivity = async (
+    type: 'create' | 'update' | 'delete' | 'comment' | 'status_change',
+    message: string,
+    details: string,
+    apartmentId?: string,
+    apartmentAddress?: string
+) => {
+    if (!db) return;
+    try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        // Ensure NO undefined values are passed to Firestore
+        const logData = {
+            type,
+            message,
+            details,
+            userName: user?.displayName || 'System',
+            userEmail: user?.email || 'system@app.local',
+            timestamp: new Date(),
+            apartmentId: apartmentId || null,
+            apartmentAddress: apartmentAddress || null
+        };
+
+        // Double check for any other undefined
+        Object.keys(logData).forEach(key => (logData as any)[key] === undefined && delete (logData as any)[key]);
+
+        await addDoc(collection(db, ACTIVITY_LOGS_COLLECTION), logData);
+    } catch (error) {
+        console.error("Failed to log activity:", error);
+    }
+};
 
 // Mock data for fallback when Firebase is not configured
 const MOCK_DATA: Apartment[] = [
@@ -87,6 +124,15 @@ export const apartmentService = {
             ...apartment,
             lastActivity: new Date().toISOString()
         });
+
+        await logActivity(
+            'create',
+            `Neue Kündigung: ${apartment.address}`,
+            `Objekt: ${apartment.objectName}, Mieter: ${apartment.oldTenant}`,
+            docRef.id,
+            apartment.address
+        );
+
         return { id: docRef.id, ...apartment } as Apartment;
     },
 
@@ -101,12 +147,48 @@ export const apartmentService = {
             ...cleanUpdates,
             lastActivity
         });
+
+        // Determine activity type and message
+        let type: 'update' | 'status_change' | 'comment' = 'update';
+        let message = 'Änderungen gespeichert';
+        let details = `Update ID: ${id}`;
+
+        if (updates.status) {
+            type = 'status_change';
+            message = `Status geändert: ${updates.status}`;
+            details = `Neuer Status für Objekt ${id}`;
+        }
+
+        // Log the activity
+        // We explicitly pass undefined for address here because we don't have it handy
+        // The logActivity function MUST convert this to null.
+        await logActivity(
+            type,
+            message,
+            details,
+            id,
+            undefined
+        );
+
         return { id, ...updates, lastActivity } as any;
     },
 
     deleteApartment: async (id: string): Promise<void> => {
         const docRef = doc(db, COLLECTION_NAME, id);
+
+        // Ideally fetch data first to log detailed message
+        let address = id;
+        try {
+            // we could getDoc here but let's just log deletion
+        } catch (e) { }
+
         await deleteDoc(docRef);
+
+        await logActivity(
+            'delete',
+            'Datensatz gelöscht',
+            `Kündigung/Objekt ${id} wurde entfernt`,
+            id
+        );
     }
 };
-

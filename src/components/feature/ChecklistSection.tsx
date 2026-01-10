@@ -6,6 +6,9 @@ import { cn } from '@/lib/utils';
 import { ClipboardList, Trash, ChevronDown } from 'lucide-react';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { NOTIFICATION_CONFIG } from '@/lib/notifications';
+import { useAuthStore } from '@/store/useAuthStore';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 interface ChecklistSectionProps {
     apartment: Apartment;
@@ -13,10 +16,20 @@ interface ChecklistSectionProps {
     onTriggerTenantPopup: () => void;
 }
 
+// Helper function to get user initials
+const getInitials = (name?: string | null): string => {
+    if (!name) return '??';
+    const parts = name.split(' ').filter(p => p.length > 0);
+    if (parts.length === 0) return '??';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
 export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, onUpdateChecklist, onTriggerTenantPopup }) => {
     const [manualCollapse, setManualCollapse] = useState<Record<string, boolean>>({});
     const [newChecklistItemText, setNewChecklistItemText] = useState('');
     const addNotification = useNotificationStore(state => state.addNotification);
+    const user = useAuthStore(state => state.user);
 
     const isSectionCollapsed = (title: string) => {
         if (manualCollapse[title] !== undefined) return manualCollapse[title];
@@ -29,6 +42,23 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, o
 
     const handleItemUpdate = (idx: number, updates: Partial<ChecklistItem>) => {
         const newList = [...apartment.checklist];
+        const item = newList[idx];
+
+        // Track completion
+        if (updates.completed !== undefined && item.type === 'checkbox') {
+            if (updates.completed) {
+                // Mark as completed - track who and when
+                updates.completedBy = user?.email || user?.displayName || 'Unknown';
+                updates.completedByInitials = getInitials(user?.displayName || user?.email);
+                updates.completedAt = new Date().toISOString();
+            } else {
+                // Unchecked - clear tracking
+                updates.completedBy = undefined;
+                updates.completedByInitials = undefined;
+                updates.completedAt = undefined;
+            }
+        }
+
         newList[idx] = { ...newList[idx], ...updates };
         onUpdateChecklist(newList);
 
@@ -103,20 +133,38 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({ apartment, o
                     return (
                         <div key={idx} className="p-5 border-b last:border-b-0 hover:bg-slate-50/50 flex flex-col gap-2 transition duration-200 px-8">
                             {item.type === 'checkbox' ? (
-                                <label className={cn("flex items-center justify-between cursor-pointer select-none", item.completed ? 'text-slate-300' : 'font-bold text-slate-700')}>
-                                    <div className="flex items-center gap-4">
-                                        <input
-                                            type="checkbox"
-                                            checked={item.completed}
-                                            onChange={e => handleItemUpdate(idx, { completed: e.target.checked })}
-                                            className="w-6 h-6 rounded-lg border-2 border-slate-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer accent-blue-600"
-                                        />
-                                        <span className={cn("text-[15px]", item.completed && 'line-through')}>{item.text}</span>
+                                <div className="flex items-start gap-3 group">
+                                    <input
+                                        type="checkbox"
+                                        checked={item.completed || false}
+                                        onChange={() => handleItemUpdate(idx, { completed: !item.completed })}
+                                        className="mt-1 w-5 h-5 rounded border-2 border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer transition-all"
+                                    />
+                                    <div className="flex-1">
+                                        <label className={cn(
+                                            "text-sm font-medium cursor-pointer transition-all",
+                                            item.completed ? "text-slate-400 line-through" : "text-slate-700"
+                                        )}>
+                                            {item.text}
+                                        </label>
+                                        {item.completed && item.completedBy && (
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-[10px] font-black">
+                                                    {item.completedByInitials}
+                                                </span>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    {item.completedAt && format(new Date(item.completedAt), 'dd.MM.yyyy', { locale: de })}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <button onClick={() => deleteItem(idx)} className="text-slate-200 hover:text-red-500 transition-colors p-1">
-                                        <Trash className="w-5 h-5" />
+                                    <button
+                                        onClick={() => deleteItem(idx)}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
+                                    >
+                                        <Trash className="w-4 h-4" />
                                     </button>
-                                </label>
+                                </div>
                             ) : item.type === 'group' ? (
                                 <div className="grid grid-cols-3 gap-6">
                                     {item.items?.map((si, sidx) => (

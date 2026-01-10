@@ -98,20 +98,49 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
         loadTeam();
     }, [user]);
 
+    // Error state for validation
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Validate form
+    const validateForm = (): boolean => {
+        const newErrors: Record<string, string> = {};
+
+        if (!formData.address?.trim()) {
+            newErrors.address = 'Adresse ist erforderlich';
+        }
+        if (!formData.objectName?.trim()) {
+            newErrors.objectName = 'Objekt ist erforderlich';
+        }
+        if (!formData.oldTenant?.trim()) {
+            newErrors.oldTenant = 'Alter Mieter ist erforderlich';
+        }
+        if (!formData.terminationDate) {
+            newErrors.terminationDate = 'Kündigungsdatum ist erforderlich';
+        }
+        if (!formData.responsible) {
+            newErrors.responsible = 'Zuständigkeit ist erforderlich';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async () => {
-        if (!formData.address || !formData.objectName || !formData.oldTenant || !formData.terminationDate) {
-            alert("Bitte alle Felder ausfüllen"); // Use better UI later
+        // Validate form
+        if (!validateForm()) {
             return;
         }
 
-        await addApartment({
+        const newApartment: Apartment = {
             ...formData as any,
             comments: [],
             checklist: initializeChecklist(),
             lastActivity: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             createdBy: user?.email || 'system'
-        });
+        };
+
+        await addApartment(newApartment);
 
         // Log activity
         await logActivity('apartment_created', {
@@ -136,70 +165,73 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 gap-4">
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Adresse</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Adresse *</label>
                             <input
                                 type="text"
                                 placeholder="Straße, PLZ Ort"
                                 value={formData.address}
-                                onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                className="w-full bg-transparent font-black text-slate-800 text-lg outline-none"
+                                onChange={e => { setFormData({ ...formData, address: e.target.value }); setErrors({ ...errors, address: '' }); }}
+                                className={`w-full bg-transparent font-black text-slate-800 text-lg outline-none ${errors.address ? 'text-red-600' : ''}`}
                                 autoFocus
                             />
+                            {errors.address && <p className="text-red-600 text-xs font-bold mt-1">{errors.address}</p>}
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Objekt</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Objekt *</label>
                             <input
                                 type="text"
                                 placeholder="Zimmeranzahl, Lage"
                                 value={formData.objectName}
-                                onChange={e => setFormData({ ...formData, objectName: e.target.value })}
-                                className="w-full bg-transparent font-black text-slate-800 text-lg outline-none"
+                                onChange={e => { setFormData({ ...formData, objectName: e.target.value }); setErrors({ ...errors, objectName: '' }); }}
+                                className={`w-full bg-transparent font-black text-slate-800 text-lg outline-none ${errors.objectName ? 'text-red-600' : ''}`}
                             />
+                            {errors.objectName && <p className="text-red-600 text-xs font-bold mt-1">{errors.objectName}</p>}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Alter Mieter</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Alter Mieter *</label>
                             <input
                                 type="text"
                                 placeholder="Vorname Nachname"
                                 value={formData.oldTenant}
-                                onChange={e => setFormData({ ...formData, oldTenant: e.target.value })}
-                                className="w-full bg-transparent font-black text-slate-800 text-lg outline-none"
+                                onChange={e => { setFormData({ ...formData, oldTenant: e.target.value }); setErrors({ ...errors, oldTenant: '' }); }}
+                                className={`w-full bg-transparent font-black text-slate-800 text-lg outline-none ${errors.oldTenant ? 'text-red-600' : ''}`}
                             />
+                            {errors.oldTenant && <p className="text-red-600 text-xs font-bold mt-1">{errors.oldTenant}</p>}
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Kündigung per</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Kündigung per *</label>
                             <input
                                 type="date"
                                 value={formData.terminationDate}
-                                onChange={e => setFormData({ ...formData, terminationDate: e.target.value })}
-                                className="w-full bg-transparent font-black text-slate-800 text-lg outline-none"
+                                onChange={e => { setFormData({ ...formData, terminationDate: e.target.value }); setErrors({ ...errors, terminationDate: '' }); }}
+                                className={`w-full bg-transparent font-black text-slate-800 text-lg outline-none ${errors.terminationDate ? 'text-red-600' : ''}`}
                             />
+                            {errors.terminationDate && <p className="text-red-600 text-xs font-bold mt-1">{errors.terminationDate}</p>}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
-                                Zuständigkeit {loadingTeam && '(Laden...)'}
+                                Zuständigkeit * {loadingTeam && '(Laden...)'}
                             </label>
                             <select
                                 value={formData.responsible}
-                                onChange={e => setFormData({ ...formData, responsible: e.target.value as Responsible })}
-                                className="w-full bg-transparent font-black text-slate-800 text-lg outline-none cursor-pointer"
+                                onChange={e => { setFormData({ ...formData, responsible: e.target.value as Responsible }); setErrors({ ...errors, responsible: '' }); }}
+                                className={`w-full bg-transparent font-black text-slate-800 text-lg outline-none ${errors.responsible ? 'text-red-600' : ''}`}
                                 disabled={loadingTeam}
                             >
-                                {teamMembers.length === 0 && !loadingTeam && (
-                                    <option value="">Keine Benutzer verfügbar</option>
-                                )}
+                                <option value="">Bitte wählen</option>
                                 {teamMembers.map((member) => (
                                     <option key={member.id} value={member.displayName}>
                                         {member.displayName}
                                     </option>
                                 ))}
                             </select>
+                            {errors.responsible && <p className="text-red-600 text-xs font-bold mt-1">{errors.responsible}</p>}
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Weitervermietung</label>

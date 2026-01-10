@@ -2,7 +2,7 @@
   "name": "hit-flow",
   "private": true,
   "version": "1.0.0",
-  "description": "HIT Flow - Professional Property Termination Management System",
+  "description": "HIT Flow - Property Termination Management System",
   "type": "module",
   "scripts": {
     "dev": "vite",

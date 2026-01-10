@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export interface CreateUserParams {
@@ -26,7 +26,7 @@ export const createUserAccount = async (params: CreateUserParams): Promise<void>
         const firebaseUser = userCredential.user;
 
         // 2. Create user document in Firestore authorized_users collection
-        await addDoc(collection(db, 'authorized_users'), {
+        await setDoc(doc(db, 'authorized_users', email.toLowerCase()), {
             email: email.toLowerCase(),
             displayName: displayName || email.split('@')[0],
             role: role,

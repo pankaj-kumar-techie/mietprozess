@@ -26,7 +26,7 @@ if (isConfigValid) {
     // They indicate real-time connection management and are not errors
     // Firestore automatically reconnects when needed
 } else {
-    console.warn("Firebase API Key is missing. MietProzess is running in Mock Mode.");
+    console.warn("Firebase API Key is missing. HIT Flow is running in Mock Mode.");
 }
 
 export { db, auth };

@@ -1,17 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface UserProfile {
+export interface UserProfile {
     name: string; // email or username
-    email: string;
-    displayName?: string; // Full name
-    role: 'admin' | 'user';
+    email: string | null;
+    displayName?: string | null;
+    role?: 'admin' | 'user';
+    createdAt?: string;
 }
 
 interface AuthState {
     isAuthenticated: boolean;
     user: UserProfile | null;
-    login: (email: string, role?: 'admin' | 'user', displayName?: string) => void;
+    login: (userProfile: UserProfile) => void;
     logout: () => void;
 }
 
@@ -20,19 +21,11 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             isAuthenticated: false,
             user: null,
-            login: (email: string, role: 'admin' | 'user' = 'user', displayName?: string) => set({
-                isAuthenticated: true,
-                user: {
-                    name: email,
-                    email,
-                    displayName: displayName || email.split('@')[0],
-                    role
-                }
-            }),
+            login: (userProfile) => set({ isAuthenticated: true, user: userProfile }),
             logout: () => set({ isAuthenticated: false, user: null }),
         }),
         {
-            name: 'mietprozess-auth',
+            name: 'auth-storage',
         }
     )
 );

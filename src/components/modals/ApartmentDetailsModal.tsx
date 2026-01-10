@@ -1,16 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { useApartmentStore } from '@/store/useApartmentStore';
 import { useAuthStore } from '@/store/useAuthStore';
-import { STATUS_COLORS, STATUS_OPTIONS } from '@/types';
-import type { Status } from '@/types';
+import { STATUS_OPTIONS, type Status, type Apartment } from '@/types';
 import { NewTenantPopup } from '@/components/modals/NewTenantPopup';
 import { DetailsHeader } from '@/components/feature/DetailsHeader';
 import { StammdatenSection } from '@/components/feature/StammdatenSection';
 import { ChecklistSection } from '@/components/feature/ChecklistSection';
 import { CommentsSection } from '@/components/feature/CommentsSection';
 import { isStatusComplete } from '@/lib/logic';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { logActivity } from '@/services/userService';
 
 interface ApartmentDetailsModalProps {
@@ -19,31 +16,13 @@ interface ApartmentDetailsModalProps {
 }
 
 export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ apartmentId, onClose }) => {
-    const { apartments, updateApartment, filterResponsible, searchTerm } = useApartmentStore();
+    const { apartments, updateApartment } = useApartmentStore();
     const user = useAuthStore(state => state.user);
     const apartment = apartments.find(a => a.id === apartmentId);
     const [showTenantPopup, setShowTenantPopup] = useState(false);
     const commentsRef = useRef<HTMLElement>(null);
 
     if (!apartment) return null;
-
-    // Navigation Logic (finding prev/next based on current filters)
-    const filtered = apartments.filter(a => {
-        const s = searchTerm.toLowerCase();
-        const matchSearch = !searchTerm ||
-            a.address.toLowerCase().includes(s) ||
-            a.oldTenant.toLowerCase().includes(s) ||
-            a.objectName.toLowerCase().includes(s) ||
-            a.newTenant?.toLowerCase().includes(s);
-        const matchResp = filterResponsible === 'Alle' || a.responsible === filterResponsible;
-        return matchSearch && matchResp;
-    });
-
-    const currentIndex = filtered.findIndex(a => a.id === apartmentId);
-    const hasPrev = currentIndex > 0;
-    const hasNext = currentIndex < filtered.length - 1;
-
-
 
     const handleStatusChange = (newStatus: Status) => {
         // Check gating
@@ -53,7 +32,15 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
             alert(`Bevor Sie zum Status "${newStatus}" wechseln können, müssen erst alle Aufgaben unter "${apartment.status}" erledigt sein.`);
             return;
         }
-        updateApartment(apartment.id, { status: newStatus });
+
+        const updates: Partial<Apartment> = { status: newStatus };
+
+        // Track when apartment is completed
+        if (newStatus === 'Abgeschlossen' && !apartment.completedAt) {
+            updates.completedAt = new Date().toISOString();
+        }
+
+        updateApartment(apartment.id, updates);
 
         // Log activity
         logActivity('status_changed', {
@@ -62,22 +49,6 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({ ap
             oldStatus: apartment.status,
             newStatus: newStatus
         });
-    };
-
-    const handlePrev = () => {
-        if (hasPrev) {
-            const prevApt = filtered[currentIndex - 1];
-            onClose();
-            setTimeout(() => window.dispatchEvent(new CustomEvent('openApartment', { detail: prevApt.id })), 50);
-        }
-    };
-
-    const handleNext = () => {
-        if (hasNext) {
-            const nextApt = filtered[currentIndex + 1];
-            onClose();
-            setTimeout(() => window.dispatchEvent(new CustomEvent('openApartment', { detail: nextApt.id })), 50);
-        }
     };
 
     return (

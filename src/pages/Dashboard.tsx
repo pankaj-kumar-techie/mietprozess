@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useApartmentStore } from '@/store/useApartmentStore';
 import { Layout } from '@/components/dashboard/Layout';
@@ -22,6 +23,7 @@ export const Dashboard: React.FC = () => {
     const [currentView, setCurrentView] = useState<'kanban' | 'list'>('kanban');
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(null);
+    const [showArchived, setShowArchived] = useState(false);
 
     // Real-time subscription - updates automatically without refresh!
     useEffect(() => {
@@ -31,9 +33,22 @@ export const Dashboard: React.FC = () => {
         return () => unsubscribe();
     }, [subscribeToApartments]);
 
-    // Filter apartments for Kanban (List handles its own filtering inside because of table sort complexity, 
-    // or we can lift it up. For Kanban we MUST filter pass-down)
+    // Filter apartments
     const filteredApartments = apartments.filter(a => {
+        // Archive filtering
+        if (!showArchived) {
+            // Check if apartment should be archived (30 days after completion)
+            if (a.completedAt) {
+                const completedDate = new Date(a.completedAt);
+                const now = new Date();
+                const daysSinceCompleted = Math.floor((now.getTime() - completedDate.getTime()) / (1000 * 60 * 60 * 24));
+                if (daysSinceCompleted >= 30) {
+                    return false; // Hide archived apartments
+                }
+            }
+        }
+
+        // Search and responsibility filtering
         const s = searchTerm.toLowerCase();
         const matchSearch = !searchTerm ||
             a.address.toLowerCase().includes(s) ||
@@ -46,12 +61,24 @@ export const Dashboard: React.FC = () => {
 
     return (
         <Layout onNewTermination={() => setShowAddModal(true)}>
-            <FilterBar currentView={currentView} onViewChange={setCurrentView} />
+            <FilterBar
+                currentView={currentView}
+                onViewChange={setCurrentView}
+                showArchived={showArchived}
+                onToggleArchived={() => setShowArchived(!showArchived)}
+            />
 
             {currentView === 'kanban' ? (
                 <KanbanBoard
                     apartments={filteredApartments}
-                    onStatusChange={(ap, newStatus) => updateApartment(ap.id, { status: newStatus })}
+                    onStatusChange={(ap, newStatus) => {
+                        const updates: any = { status: newStatus };
+                        // Rule 1: Set completedAt when moving to 'abgeschlossen'
+                        if (newStatus === 'abgeschlossen' && !ap.completedAt) {
+                            updates.completedAt = new Date().toISOString();
+                        }
+                        updateApartment(ap.id, updates);
+                    }}
                     onCardClick={(id) => setSelectedApartmentId(id)}
                     onCardDelete={(id) => deleteApartment(id)}
                 />

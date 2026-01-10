@@ -29,7 +29,7 @@ export const exportApartmentsToExcel = (apartments: Apartment[]) => {
 
     // Generate filename with timestamp
     const date = new Date().toISOString().split('T')[0];
-    const filename = `MietProzess_Export_${date}.xlsx`;
+    const filename = `HIT_Flow_Export_${date}.xlsx`;
 
     XLSX.writeFile(workbook, filename);
 };
