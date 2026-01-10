@@ -155,6 +155,13 @@ export const Help = () => {
                                                 <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
                                                     Wechseln Sie zwischen der <span className="font-bold">Kanban-Ansicht</span> für visuelles Tracking und der <span className="font-bold">Listen-Ansicht</span> für tabellarische Auswertungen. Nutzen Sie die Schnellfilter, um Ihre verantwortlichen Objekte sofort zu finden.
                                                 </p>
+                                                <div className="mt-3 p-3 bg-white/60 rounded-xl border border-blue-100 flex items-start gap-3">
+                                                    <Zap className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                                        <span className="font-black text-blue-600 uppercase tracking-widest mr-1">Pro-Tipp:</span>
+                                                        {t('help.pro_tip_search', 'Nutzen Sie die Schnellsuche (Shortcut: Strg+F) auf dem Dashboard, um Wohnungen sofort nach Adresse oder Mieter zu filtern.')}
+                                                    </p>
+                                                </div>
                                             </div>
                                             <div className="p-5 bg-slate-50 rounded-3xl border border-slate-100">
                                                 <h4 className="font-black text-slate-700 text-xs uppercase tracking-widest mb-2">Profil & Sicherheit</h4>
@@ -331,7 +338,7 @@ export const Help = () => {
                     </div>
                 </div>
 
-                <p className="text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.4em] pt-8">PropTerm documentation system • Strictly Confidential</p>
+                {/* <p className="text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.4em] pt-8">PropTerm documentation system • Strictly Confidential</p> */}
             </div>
         </div>
     );

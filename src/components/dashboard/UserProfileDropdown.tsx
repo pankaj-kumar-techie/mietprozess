@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 import { logoutFromFirebase } from '@/lib/auth-logic';
-import { ChevronDown, User, Shield, LogOut, HelpCircle, Key } from 'lucide-react';
+import { ChevronDown, User, Shield, LogOut, Key } from 'lucide-react';
 
 export const UserProfileDropdown = () => {
     const [isOpen, setIsOpen] = useState(false);

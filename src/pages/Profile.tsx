@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNotificationStore } from '@/store/useNotificationStore';
-import { User, Mail, ArrowLeft, Shield, ChevronRight } from 'lucide-react';
+import { User, Mail, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 

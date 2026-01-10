@@ -75,15 +75,33 @@ export const PasswordChangePage = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto p-6 md:p-12 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Minimalist Header */}
-            <div className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 shadow-xl shadow-blue-100 rounded-[1.5rem] text-white">
-                    <Key className="w-8 h-8" />
+        <div className="max-w-2xl mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg border-4 border-white">
+                        <Key className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t('profile.change_password', 'Passwort ändern')}</h1>
+                        <p className="text-blue-600 font-black uppercase text-[10px] tracking-widest bg-blue-50 px-2 py-0.5 rounded-md inline-block">
+                            {t('profile.security', 'Sicherheit')}
+                        </p>
+                    </div>
                 </div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">{t('profile.change_password', 'Passwort ändern')}</h1>
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{t('profile.security_desc_short', 'Erhöhen Sie die Sicherheit Ihres Kontos')}</p>
+                <Button
+                    onClick={() => navigate('/')}
+                    variant="outline"
+                    className="gap-2 border-2 rounded-xl h-11 px-6 font-bold text-slate-600 hover:text-slate-800 transition-all hover:bg-slate-50 active:scale-95"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    {t('dashboard.title', 'Dashboard')}
+                </Button>
             </div>
+
+            <p className="text-slate-500 font-medium text-sm">
+                {t('profile.security_desc_short', 'Erhöhen Sie die Sicherheit Ihres Kontos')}
+            </p>
 
             {/* Simple Card */}
             <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl border-4 border-slate-50 relative overflow-hidden group">

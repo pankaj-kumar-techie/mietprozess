@@ -5,6 +5,8 @@ import { getTeamMembers, type TeamMember } from '@/services/teamService';
 import type { Apartment, Responsible, Status } from '@/types';
 import { Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CustomSelect } from '@/components/ui/CustomSelect';
+import { useTranslation } from 'react-i18next';
 
 interface StammdatenSectionProps {
     apartment: Apartment;
@@ -14,6 +16,7 @@ interface StammdatenSectionProps {
 export const StammdatenSection: React.FC<StammdatenSectionProps> = ({ apartment, onUpdate }) => {
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [loadingTeam, setLoadingTeam] = useState(true);
+    const { t } = useTranslation();
 
     // Local state for the form
     const [formData, setFormData] = useState({
@@ -107,34 +110,25 @@ export const StammdatenSection: React.FC<StammdatenSectionProps> = ({ apartment,
                     />
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-xl border-2 border-slate-100 shadow-sm transition-all focus-within:border-blue-200 focus-within:bg-white group">
-                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1 block tracking-widest group-focus-within:text-blue-500">Status</label>
-                    <select
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest group-focus-within:text-blue-500">{t('apartment.status', 'Status')}</label>
+                    <CustomSelect
                         value={formData.status}
-                        onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as Status }))}
-                        className="w-full bg-transparent font-black text-slate-800 text-sm outline-none cursor-pointer"
-                    >
-                        {STATUS_OPTIONS.map((s: string) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                        onChange={val => setFormData(prev => ({ ...prev, status: val as Status }))}
+                        options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))}
+                        className="w-full"
+                    />
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-xl border-2 border-slate-100 shadow-sm transition-all focus-within:border-blue-200 focus-within:bg-white group">
-                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1 block tracking-widest group-focus-within:text-blue-500">
-                        Zuständig {loadingTeam && '(Laden...)'}
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest group-focus-within:text-blue-500">
+                        {t('apartment.responsible', 'Zuständig')} {loadingTeam && `(${t('actions.loading', 'Laden...')})`}
                     </label>
-                    <select
+                    <CustomSelect
                         value={formData.responsible}
-                        onChange={e => setFormData(prev => ({ ...prev, responsible: e.target.value as Responsible }))}
-                        className="w-full bg-transparent font-black text-slate-800 text-sm outline-none cursor-pointer"
+                        onChange={val => setFormData(prev => ({ ...prev, responsible: val as Responsible }))}
+                        options={teamMembers.map(m => ({ value: m.displayName, label: m.displayName }))}
                         disabled={loadingTeam}
-                    >
-                        {teamMembers.length === 0 && !loadingTeam && (
-                            <option value="">Keine Benutzer verfügbar</option>
-                        )}
-                        {teamMembers.map((member) => (
-                            <option key={member.id} value={member.displayName}>
-                                {member.displayName}
-                            </option>
-                        ))}
-                    </select>
+                        className="w-full"
+                    />
                 </div>
             </div>
 

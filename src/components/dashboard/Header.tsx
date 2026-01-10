@@ -4,7 +4,6 @@ import { Building2, HelpCircle, Bell, Plus } from 'lucide-react';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import APP_CONFIG from '@/config/app.config';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
 
 interface HeaderProps {
     onNewTermination: () => void;
@@ -12,16 +11,7 @@ interface HeaderProps {
 
 export const Header = ({ onNewTermination }: HeaderProps) => {
     const navigate = useNavigate();
-    const { t, i18n } = useTranslation();
-
-    const languages = [
-        { code: 'de', label: 'DE', flag: '🇩🇪' },
-        { code: 'en', label: 'EN', flag: '🇺🇸' }
-    ];
-
-    const changeLanguage = (code: string) => {
-        i18n.changeLanguage(code);
-    };
+    const { t } = useTranslation();
 
     return (
         <header className="bg-white/80 border-b border-slate-100 sticky top-0 z-50 backdrop-blur-xl transition-all">
@@ -74,27 +64,6 @@ export const Header = ({ onNewTermination }: HeaderProps) => {
 
                         {/* Divider */}
                         <div className="h-6 w-px bg-slate-100 mx-1 hidden sm:block"></div>
-
-                        {/* Language Switcher */}
-                        {/* <div className="flex bg-slate-100 p-1 rounded-lg gap-1 border border-slate-200">
-                            {languages.map((lang) => (
-                                <button
-                                    key={lang.code}
-                                    onClick={() => changeLanguage(lang.code)}
-                                    className={cn(
-                                        "px-2 py-1 rounded-md text-[10px] font-black transition-all",
-                                        i18n.language.startsWith(lang.code)
-                                            ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200"
-                                            : "text-slate-400 hover:text-slate-600"
-                                    )}
-                                >
-                                    {lang.label}
-                                </button>
-                            ))}
-                        </div> */}
-
-                        {/* Divider */}
-                        {/* <div className="h-6 w-px bg-slate-100 mx-1 hidden sm:block"></div> */}
 
                         {/* Profile Dropdown */}
                         <UserProfileDropdown />

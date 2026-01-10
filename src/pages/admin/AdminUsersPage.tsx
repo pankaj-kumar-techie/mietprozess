@@ -13,6 +13,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/input';
 import { ConfirmationModal } from '@/components/modals/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 export const AdminUsersPage = () => {
     const navigate = useNavigate();
@@ -230,16 +231,16 @@ export const AdminUsersPage = () => {
                                 />
                             </div>
                             <div>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Rolle</label>
-                                <select
+                                <label className="text-sm font-bold text-slate-700 block mb-2">{t('profile.role', 'Rolle')}</label>
+                                <CustomSelect
                                     value={newRole}
-                                    onChange={(e) => setNewRole(e.target.value as 'admin' | 'user')}
-                                    className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 font-medium focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                                    onChange={(val) => setNewRole(val as 'admin' | 'user')}
+                                    options={[
+                                        { value: 'user', label: t('profile.role_user', 'Benutzer') },
+                                        { value: 'admin', label: t('profile.role_admin', 'Administrator') }
+                                    ]}
                                     disabled={creating}
-                                >
-                                    <option value="user">Benutzer</option>
-                                    <option value="admin">Administrator</option>
-                                </select>
+                                />
                             </div>
                         </div>
                         <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 rounded-xl h-12 gap-2 font-bold" disabled={creating}>
@@ -321,15 +322,16 @@ export const AdminUsersPage = () => {
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-black uppercase text-slate-400 block mb-2">Rolle</label>
-                            <select
+                            <label className="text-xs font-black uppercase text-slate-400 block mb-2">{t('profile.role', 'Rolle')}</label>
+                            <CustomSelect
                                 value={editRole}
-                                onChange={(e) => setEditRole(e.target.value as 'admin' | 'user')}
-                                className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 focus:border-green-500 outline-none transition-all"
-                            >
-                                <option value="user">Benutzer</option>
-                                <option value="admin">Administrator</option>
-                            </select>
+                                onChange={(val) => setEditRole(val as 'admin' | 'user')}
+                                options={[
+                                    { value: 'user', label: t('profile.role_user', 'Benutzer') },
+                                    { value: 'admin', label: t('profile.role_admin', 'Administrator') }
+                                ]}
+                                className="w-full"
+                            />
                         </div>
 
                         {/* Password Reset Section */}

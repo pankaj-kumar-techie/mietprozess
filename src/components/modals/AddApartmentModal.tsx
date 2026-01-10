@@ -6,6 +6,8 @@ import { STATUS_OPTIONS, RELETTING_OPTIONS } from '@/types';
 import { getTeamMembers, type TeamMember } from '@/services/teamService';
 import { logActivity } from '@/services/userService';
 import { useNotificationStore } from '@/store/useNotificationStore';
+import { CustomSelect } from '@/components/ui/CustomSelect';
+import { useTranslation } from 'react-i18next';
 
 // Basic checklist schema to initialize
 const DEFAULT_CHECKLIST_SCHEMA: ChecklistItem[] = [
@@ -66,6 +68,7 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
     const [loadingTeam, setLoadingTeam] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const addNotification = useNotificationStore(state => state.addNotification);
+    const { t } = useTranslation();
 
     const [formData, setFormData] = useState<Partial<Apartment>>({
         address: '',
@@ -207,33 +210,31 @@ export const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ onClose })
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
-                                Zuständigkeit * {loadingTeam && '(Laden...)'}
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">
+                                {t('apartment.responsible', 'Zuständigkeit')} * {loadingTeam && `(${t('actions.loading', 'Laden...')})`}
                             </label>
-                            <select
-                                value={formData.responsible}
-                                onChange={e => { setFormData({ ...formData, responsible: e.target.value as Responsible }); setErrors({ ...errors, responsible: '' }); }}
-                                className={`w-full bg-transparent font-black text-slate-800 text-lg outline-none ${errors.responsible ? 'text-red-600' : ''}`}
+                            <CustomSelect
+                                value={formData.responsible || ''}
+                                onChange={val => { setFormData({ ...formData, responsible: val as Responsible }); setErrors({ ...errors, responsible: '' }); }}
+                                options={[
+                                    { value: '', label: t('actions.please_select', 'Bitte wählen') },
+                                    ...teamMembers.map(m => ({ value: m.displayName, label: m.displayName }))
+                                ]}
                                 disabled={loadingTeam}
-                            >
-                                <option value="">Bitte wählen</option>
-                                {teamMembers.map((member) => (
-                                    <option key={member.id} value={member.displayName}>
-                                        {member.displayName}
-                                    </option>
-                                ))}
-                            </select>
+                                className="w-full"
+                            />
                             {errors.responsible && <p className="text-red-600 text-xs font-bold mt-1">{errors.responsible}</p>}
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Weitervermietung</label>
-                            <select
-                                value={formData.relettingOption}
-                                onChange={e => setFormData({ ...formData, relettingOption: e.target.value as RelettingOption })}
-                                className="w-full bg-transparent font-black text-slate-800 text-lg outline-none cursor-pointer"
-                            >
-                                {RELETTING_OPTIONS.map((o: string) => <option key={o} value={o}>{o}</option>)}
-                            </select>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">
+                                {t('apartment.reletting', 'Weitervermietung')}
+                            </label>
+                            <CustomSelect
+                                value={formData.relettingOption || ''}
+                                onChange={val => setFormData({ ...formData, relettingOption: val as RelettingOption })}
+                                options={RELETTING_OPTIONS.map(o => ({ value: o, label: o }))}
+                                className="w-full"
+                            />
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import { getTeamMembers, type TeamMember } from '@/services/teamService';
 import { cn } from "@/lib/utils";
 import { exportApartmentsToExcel } from '@/lib/exportUtils';
 import { useTranslation } from 'react-i18next';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 interface FilterBarProps {
     currentView: 'kanban' | 'list';
@@ -17,6 +18,20 @@ export const FilterBar: React.FC<FilterBarProps> = ({ currentView, onViewChange,
     const { t } = useTranslation();
     const { searchTerm, setSearchTerm, filterResponsible, setFilterResponsible } = useApartmentStore();
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ctrl+F or Cmd+F
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     useEffect(() => {
         const loadTeam = async () => {
@@ -39,6 +54,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ currentView, onViewChange,
                 {/* Search Box */}
                 <div className="flex-1 relative">
                     <input
+                        ref={searchInputRef}
                         type="text"
                         placeholder={t('dashboard.search_placeholder', 'Schnellsuche (Adresse, Mieter...)')}
                         value={searchTerm}
@@ -50,18 +66,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({ currentView, onViewChange,
 
                 <div className="flex flex-wrap items-center gap-2">
                     {/* Responsible Filter */}
-                    <select
+                    <CustomSelect
                         value={filterResponsible}
-                        onChange={(e) => setFilterResponsible(e.target.value)}
-                        className="flex-1 sm:flex-none bg-orange-50 text-orange-700 border-2 border-orange-50 rounded-xl py-2.5 px-4 font-black text-xs sm:text-[11px] uppercase tracking-widest outline-none cursor-pointer hover:bg-orange-100 transition-all appearance-none text-center shadow-sm"
-                    >
-                        <option value="Alle">{t('dashboard.responsible_all', 'TEAM (ALLE)')}</option>
-                        {teamMembers.map(member => (
-                            <option key={member.id} value={member.displayName}>
-                                {member.displayName.toUpperCase()}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={(val) => setFilterResponsible(val)}
+                        variant="orange"
+                        options={[
+                            { value: 'Alle', label: t('dashboard.responsible_all', 'TEAM (ALLE)') },
+                            ...teamMembers.map(m => ({ value: m.displayName, label: m.displayName.toUpperCase() }))
+                        ]}
+                        className="flex-1 sm:flex-none w-full sm:w-auto"
+                    />
 
                     <div className="flex items-center gap-1.5">
                         {/* Archive Toggle */}

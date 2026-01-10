@@ -85,7 +85,8 @@ const resources = {
                 "staff_manual": "Handbuch für Mitarbeiter",
                 "process_title": "Der HIT Flow Prozess",
                 "welcome_desc": "Willkommen bei HIT Flow. Unser System führt Sie strukturiert durch den gesamten Kündigungs- und Vermietungsprozess einer Immobilie.",
-                "error_recent_login": "Sicherheits-Timeout: Bitte loggen Sie sich erneut ein, um das Passwort zu ändern."
+                "error_recent_login": "Sicherheits-Timeout: Bitte loggen Sie sich erneut ein, um das Passwort zu ändern.",
+                "pro_tip_search": "Nutzen Sie die Schnellsuche (Shortcut: Strg+F) auf dem Dashboard, um Wohnungen sofort nach Adresse oder Mieter zu filtern."
             },
             "admin": {
                 "dashboard_title": "Admin Dashboard",
@@ -191,7 +192,8 @@ const resources = {
                 "staff_manual": "Staff Manual",
                 "process_title": "The HIT Flow Process",
                 "welcome_desc": "Welcome to HIT Flow. Our system guides you through the entire termination and re-rental process of a property.",
-                "error_recent_login": "Security Timeout: Please log in again to change your password."
+                "error_recent_login": "Security Timeout: Please log in again to change your password.",
+                "pro_tip_search": "Use the quick search (Shortcut: Ctrl+F) on the dashboard to instantly filter apartments by address or tenant."
             },
             "admin": {
                 "dashboard_title": "Admin Dashboard",

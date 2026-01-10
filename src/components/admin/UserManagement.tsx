@@ -8,6 +8,7 @@ import { Trash2, UserPlus, Shield, User as UserIcon, Edit2, Key, AlertTriangle }
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/input';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 interface ExtendedUserProfile extends UserProfile {
     id: string;
@@ -175,14 +176,15 @@ export const UserManagement = () => {
                             />
                         </div>
                         <div className="md:col-span-3">
-                            <select
+                            <CustomSelect
                                 value={newRole}
-                                onChange={(e) => setNewRole(e.target.value as 'admin' | 'user')}
-                                className="w-full h-11 bg-white border border-slate-200 rounded-xl px-4 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-green-500/20 font-sans"
-                            >
-                                <option value="user">Benutzer</option>
-                                <option value="admin">Admin</option>
-                            </select>
+                                onChange={(val: string) => setNewRole(val as 'admin' | 'user')}
+                                options={[
+                                    { value: 'user', label: 'Benutzer' },
+                                    { value: 'admin', label: 'Admin' }
+                                ]}
+                                className="w-full"
+                            />
                         </div>
                     </div>
                     <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl h-11 gap-2 font-bold shadow-lg shadow-green-600/20 font-sans">
@@ -292,14 +294,15 @@ export const UserManagement = () => {
                     </div>
                     <div>
                         <label className="text-xs font-black uppercase text-slate-400 block mb-2">Rolle</label>
-                        <select
+                        <CustomSelect
                             value={editRole}
-                            onChange={(e) => setEditRole(e.target.value as 'admin' | 'user')}
-                            className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 focus:border-green-500 outline-none transition-all"
-                        >
-                            <option value="user">Benutzer</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                            onChange={(val: string) => setEditRole(val as 'admin' | 'user')}
+                            options={[
+                                { value: 'user', label: 'Benutzer' },
+                                { value: 'admin', label: 'Admin' }
+                            ]}
+                            className="w-full"
+                        />
                     </div>
                     <div className="pt-4 flex gap-3">
                         <Button onClick={() => setIsEditModalOpen(false)} variant="outline" className="flex-1">Abbrechen</Button>
