@@ -1,6 +1,4 @@
 
-import React from 'react';
-
 export const SkeletonApartmentCard = () => {
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm border-2 border-slate-100 flex flex-col gap-4 w-[300px] shrink-0 animate-pulse">
