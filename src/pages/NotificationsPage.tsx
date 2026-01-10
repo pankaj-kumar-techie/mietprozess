@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { getDocs, collection, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Bell, Activity, CheckCircle, AlertTriangle, FileText, User, Building2 } from 'lucide-react';
+import { Bell, Activity, CheckCircle, AlertTriangle, FileText, User, Building2, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
 
 interface ActivityLog {
     id: string;
@@ -70,14 +71,24 @@ export const NotificationsPage = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-8 animate-in fade-in">
-            <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
-                <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm">
-                    <Bell className="w-7 h-7" />
+            <div className="flex items-center justify-between border-b border-slate-200 pb-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm">
+                        <Bell className="w-7 h-7" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Benachrichtigungen</h1>
+                        <p className="text-slate-500 font-medium">Aktivitäten des Teams</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">Benachrichtigungen</h1>
-                    <p className="text-slate-500 font-medium">Aktivitäten des Teams</p>
-                </div>
+                <Button
+                    onClick={() => window.history.back()}
+                    variant="outline"
+                    className="gap-2 border-2 rounded-xl h-11 px-6 font-bold text-slate-600 hover:text-slate-800"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Zurück
+                </Button>
             </div>
 
             <div className="space-y-4">

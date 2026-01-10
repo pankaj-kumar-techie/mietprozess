@@ -50,6 +50,16 @@ export const Dashboard: React.FC = () => {
             a.newTenant?.toLowerCase().includes(s);
         const matchResp = filterResponsible === 'Alle' || a.responsible === filterResponsible;
         return matchSearch && matchResp;
+    }).map(a => {
+        // Visual Transformation for Archive View
+        // If we are showing the archive, and an item IS archived (by logic),
+        // we force its displayed status to 'Archiviert'.
+        // This ensures it appears solely in the gray 'Archiviert' column
+        // and does not clutter the 'Abgeschlossen' column.
+        if (showArchived && shouldArchive(a)) {
+            return { ...a, status: 'Archiviert' as const };
+        }
+        return a;
     }).sort((a, b) => {
         // Global Sorting: Chronological by Kündigung per date (nearest dates first)
         if (!a.terminationDate) return 1;

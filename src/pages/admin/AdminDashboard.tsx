@@ -1,5 +1,6 @@
+
 import { useNavigate } from 'react-router-dom';
-import { Users, Palette, Settings as SettingsIcon, Shield, ArrowLeft } from 'lucide-react';
+import { Users, Shield, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const AdminDashboard = () => {
@@ -15,37 +16,19 @@ export const AdminDashboard = () => {
             path: '/admin/users'
         },
         {
-            id: 'branding',
-            title: 'Branding & Anpassung',
-            description: 'App-Titel, Texte und UI-Elemente anpassen',
-            icon: Palette,
-            color: 'purple',
-            path: '/admin/branding'
-        },
-        {
-            id: 'settings',
-            title: 'Systemeinstellungen',
-            description: 'Erweiterte Konfiguration und Optionen',
-            icon: SettingsIcon,
+            id: 'tests',
+            title: 'System-Diagnose',
+            description: 'Automatisierte Tests der Geschäftslogik ausführen',
+            icon: CheckCircle2,
             color: 'green',
-            path: '/admin/settings'
-        },
-        {
-            id: 'security',
-            title: 'Sicherheit & Rollen',
-            description: 'Zugriffsrechte und Sicherheitseinstellungen',
-            icon: Shield,
-            color: 'red',
-            path: '/admin/security'
+            path: '/admin/tests'
         }
     ];
 
     const getColorClasses = (color: string) => {
         const colors = {
             blue: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
-            purple: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700',
             green: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
-            red: 'from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
         };
         return colors[color as keyof typeof colors] || colors.blue;
     };
@@ -66,7 +49,7 @@ export const AdminDashboard = () => {
                             className="gap-2 border-2 rounded-xl h-11 px-6"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            <span className="font-bold">Zurück</span>
+                            <span className="font-bold">Zurück zur App</span>
                         </Button>
                     </div>
                 </div>
@@ -103,8 +86,8 @@ export const AdminDashboard = () => {
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-blue-100 mb-1">Admin-Zugriff aktiv</p>
-                            <p className="text-2xl font-black">Vollständige Kontrolle</p>
+                            <p className="text-sm font-medium text-blue-100 mb-1">Admin-Status</p>
+                            <p className="text-2xl font-black">System Aktiv</p>
                         </div>
                         <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                             <Shield className="w-6 h-6" />

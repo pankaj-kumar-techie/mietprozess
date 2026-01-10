@@ -1,102 +1,90 @@
-# HIT Flow - Business Process Documentation
+# HIT Flow – Business Logic & System Guide
 
-This document explains the core logic, workflow rules, and automation implemented in the HIT Flow application for Heinzer Immobilien. It is designed to be easy to read and understand.
+**Current Version:** 1.2
+**Last Updated:** 2026-01-10
 
-## 1. The Core Workflow (The 5 Stages)
-
-The application manages property terminations through a strict 5-stage pipeline. Every termination case moves from left to right through these stages.
-
-```mermaid
-graph LR
-    A[In Kündigung] --> B[In Vermietung]
-    B --> C[Mietvertrag erstellt]
-    C --> D[Wohnung übergeben]
-    D --> E[Abgeschlossen]
-    
-    style A fill:#fee2e2,stroke:#ef4444,color:#000
-    style B fill:#fef9c3,stroke:#eab308,color:#000
-    style C fill:#dbeafe,stroke:#3b82f6,color:#000
-    style D fill:#dcfce7,stroke:#22c55e,color:#000
-    style E fill:#f3f4f6,stroke:#64748b,color:#000
-```
-
-### The Stages Explained:
-1.  **In Kündigung (Termination Received)**: The process starts here when a tenant cancels. The focus is on confirming the date and preparing for marketing.
-2.  **In Vermietung (Marketing)**: The property is actively being advertised. Viewings take place.
-3.  **Mietvertrag erstellt (Contract)**: A new tenant is found, and the contract is being drawn up/signed.
-4.  **Wohnung übergeben (Handover)**: The old tenant leaves, and the new tenant gets the keys.
-5.  **Abgeschlossen (Completed)**: All tasks are done. The case is closed.
+This document serves as the **Single Source of Truth** for the "HIT Flow" application. It defines exactly how the system behaves, the rules for moving properties between stages, and the automation logic (e.g., Archiving).
 
 ---
 
-## 2. Business Rules & Automation
+## 1. Core Workflow (Pipeline)
 
-To ensure data quality, the system enforces several rules automatically.
+The application tracks a rental property through **5 distinct statuses**. Each status represents a specific phase of the workflow.
 
-### Rule #1: The "No-Skip" Policy (Validation)
-You cannot move a card **forward** to the next stage until you have completed **100%** of the tasks in the current stage's checklist.
-*   *Example:* You cannot move a flat from "In Kündigung" to "In Vermietung" if you haven't ticked off "Kündigungsbestätigung versenden".
-*   *Exception:* You can always move a card **backward** if you made a mistake.
-
-### Rule #2: The "New Tenant" Trigger
-There is a specific task in the checklist called **"Mietvertrag unterzeichnet retour"**.
-*   **Action:** When you tick this box.
-*   **System Response:** A popup immediately appears, forcing you to enter the **New Tenant's Name** and **Rental Start Date**.
-*   **Why?**: This ensures we never forget to record who the new tenant is once the contract is signed.
-
-### Rule #3: Auto-Archiving
-We keep the board clean.
-*   **Trigger:** A case sits in the **"Abgeschlossen"** column.
-*   **Timing:** 30 days after it was finished.
-*   **Action:** It is automatically hidden from the main view.
-*   **How to find it:** You can always see these old cases by clicking the **"Archiv anzeigen"** toggle button.
+| Status | Phase Name (DE) | Phase Name (EN) | Goal of this Phase |
+| :--- | :--- | :--- | :--- |
+| **Stage 1** | **In Kündigung** | Termination | Process the termination notice. Confirm dates and inform the owner. |
+| **Stage 2** | **In Vermietung** | Renting | Marketing the property, finding a new tenant, and viewing appointments. |
+| **Stage 3** | **In Prüfung** | Review | Screening potential candidates and preparing the contract. |
+| **Stage 4** | **In Vorbereitung** | Preparation | Contract signed. Arranging handover dates and cleanup. |
+| **Stage 5** | **Abgeschlossen** | Completed | Keys handed over. Process finished. **(Visible for 30 days)** |
 
 ---
 
-## 3. Activity & Tracking
+## 2. Automation Rules
 
-The system watches everything to allow for full transparency.
+The system is designed to automate manual tasks and keep the board clean.
 
-*   **Activity Traffic Light**:
-    *   🟢 **Green** (Internal Logic): Recently updated.
-    *   🟡 **Yellow**: No updates for 7-14 days.
-    *   🔴 **Red**: No updates for 15+ days. (Need to take action!)
-    
-*   **Checklist Audit**:
-    *   Every time you tick a box, the system saves **Who** did it (Initials, e.g., "AM") and **When** (Date). This is visible right next to the task.
+### Rule A: Auto-Archiving (The 30-Day Rule)
+*   **Concept:** "Completed" properties should not clutter the board forever.
+*   **Logic:**
+    1.  If Status is **"Abgeschlossen"** (Completed)...
+    2.  ...AND the completion date was **> 30 days ago**...
+    3.  ...The property is **Hidden** (Archived).
+*   **Access:** You can verify these anytime by clicking **"Archiv anzeigen"**. They will appear in a gray "Archiviert" column.
+*   **Legacy Data:** If a property has no "Completion Date" (old data), the system uses the "Last Activity Date" instead.
+
+### Rule B: Automated Status Progression
+*   **Concept:** If you finish a checklist, you are likely ready for the next step.
+*   **Logic:**
+    *   When you check the **last item** in a checklist (100% complete)...
+    *   ...The system **automatically prompts** to move to the next status.
+    *   *Example:* Completing the "In Kündigung" checklist automatically suggests moving to "In Vermietung".
+
+### Rule C: Forward Validations
+*   **Concept:** You cannot move forward if you haven't done your homework.
+*   **Logic:**
+    *   You are prevented from dragging a card to the next column **IF** mandatory checklist items in the current column are unchecked.
+    *   *Note:* Admins can override this, but standard users cannot.
 
 ---
 
-## 4. Summary Diagram
+## 3. Data Integrity & Safety
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant System
-    participant Database
+### Deletion Safety
+*   **Feature:** Double-Confirmation.
+*   **Behavior:** Clicking "Delete" (Trash Icon) does **NOT** delete immediately.
+*   **Safety Net:** A modal appears asking "Sind Sie sicher?". You must click "Ja, löschen" to confirm. This prevents accidental data loss.
 
-    User->>System: Creates new Termination (In Kündigung)
-    System->>Database: Saves Record (Starts Timer)
-    
-    loop Daily Work
-        User->>System: Completes Checklist Tasks
-        System->>Database: Updates Progress & Initials
-        
-        opt "Mietvertrag unterzeichnet retour" Checked
-            System->>User: HOSTAGE POPUP: "Enter New Tenant!"
-            User->>System: Enters New Tenant Data
-            System->>Database: Saves Tenant Info
-        end
-    end
+### New Tenant "Lock"
+*   **Feature:** Mandatory Tenant Info.
+*   **Behavior:** When moving to Stage 3 ("In Prüfung"), the system **requires** you to enter the New Tenant's name.
+*   **Why?** We cannot prepare a contract without a name. The system ensures this data is captured at the exact right moment.
 
-    User->>System: Tries to drag to next stage
-    alt Checklist Incomplete
-        System--xUser: BLOCK: "Please finish tasks first!"
-    else Checklist Complete
-        System->>Database: Updates Status
-        System->>User: Success! Card moves forward.
-    end
-    
-    Note over System, Database: 30 Days after 'Abgeschlossen'
-    System->>User: Hides card (Archived)
-```
+---
+
+## 4. Sorting & Views
+
+*   **Global Sorting:** Properties are ALWAYS sorted by **Termination Date** (Kündigungsdatum).
+    *   *Urgency:* Dates closer to today (or in the past) appear at the **TOP**. Default: Ascending.
+*   **Filtering:** You can filter by "Responsible Person" (Zuständig) or Search (Text).
+
+---
+
+## 5. UI/UX Standards
+
+*   **Language:** All interface text is in **German** (Formal).
+*   **Colors:**
+    *   **Green:** Success / New Tenant / Done.
+    *   **Red:** Warning / Termination / Delayed.
+    *   **Blue:** Information / Active User.
+    *   **Gray:** Inactive / Archived.
+*   **Traffic Lights (Activity Monitor):**
+    *   Properties show a small "Days inactive" counter.
+    *   **< 7 Days:** Black (Normal).
+    *   **7-14 Days:** Yellow (Warning).
+    *   **> 15 Days:** Red (Critical - Needs Action).
+
+---
+
+This document represents the programmed logic of the live application.

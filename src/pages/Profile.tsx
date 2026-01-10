@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNotificationStore } from '@/store/useNotificationStore';
-import { Shield, User, Key, Mail } from 'lucide-react';
+import { Shield, User, Key, Mail, ArrowLeft } from 'lucide-react';
 
 export const Profile = () => {
     const { user } = useAuthStore();
@@ -81,14 +81,24 @@ export const Profile = () => {
     return (
         <div className="max-w-4xl mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                    {user.displayName?.charAt(0) || user.email?.charAt(0)}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                        {user.displayName?.charAt(0) || user.email?.charAt(0)}
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Mein Profil</h1>
+                        <p className="text-slate-500 font-medium">{user.role === 'admin' ? 'Administrator' : 'Benutzer'}</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">Mein Profil</h1>
-                    <p className="text-slate-500 font-medium">{user.role === 'admin' ? 'Administrator' : 'Benutzer'}</p>
-                </div>
+                <Button
+                    onClick={() => window.history.back()}
+                    variant="outline"
+                    className="gap-2 border-2 rounded-xl h-11 px-6 font-bold text-slate-600 hover:text-slate-800"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Zurück
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

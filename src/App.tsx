@@ -7,7 +7,6 @@ import { Login } from '@/pages/Login';
 import { Help } from '@/pages/Help';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
-import { AdminBrandingPage } from '@/pages/admin/AdminBrandingPage';
 import { TestRunnerPage } from '@/pages/admin/TestRunnerPage'; // Import New Page
 import { Profile } from '@/pages/Profile';
 import { NotificationsPage } from '@/pages/NotificationsPage';
@@ -85,7 +84,6 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
-          <Route path="/admin/branding" element={<AdminRoute><AdminBrandingPage /></AdminRoute>} />
           <Route path="/admin/tests" element={<AdminRoute><TestRunnerPage /></AdminRoute>} />
 
           {/* User Profile */}
